@@ -78,6 +78,9 @@ $tfYear = (int) date('Y');
           <li><a href="#main-content" class="nav-link" data-nav-target="main">Accueil</a></li>
           <li class="guest-only"><a href="#authSection" class="nav-link" data-nav-target="auth">Connexion</a></li>
           <li class="app-only"><a href="#boardSection" class="nav-link" data-nav-target="boards">Tableaux</a></li>
+          <li class="app-only">
+            <button type="button" class="nav-link nav-link--btn" id="openAccountBtn">Mon compte</button>
+          </li>
           <li><a href="#page-footer" class="nav-link" data-nav-target="footer">À propos</a></li>
         </ul>
       </nav>
@@ -143,6 +146,7 @@ $tfYear = (int) date('Y');
 
   <div id="taskModal" class="modal" hidden></div>
   <div id="columnModal" class="modal" hidden></div>
+  <div id="accountModal" class="modal" hidden></div>
   <script type="module" src="<?= htmlspecialchars(tf_url('/assets/js/app.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 </html>

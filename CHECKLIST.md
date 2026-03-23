@@ -1,7 +1,7 @@
 # TaskFlow Delivery Checklist
 
 ## Fonctionnel
-- [x] Auth: register/login/refresh
+- [x] Auth: register/login/refresh + `GET /api/auth/me` + modale « Mon compte »
 - [x] Boards: list/create/delete
 - [x] Columns: list/create/update/delete
 - [x] Tasks: list/create/update/move/delete

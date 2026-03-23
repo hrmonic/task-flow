@@ -34,6 +34,18 @@ export function clearSessionUser() {
   localStorage.removeItem(USER_KEY);
 }
 
+/** Rafraîchit le profil depuis l’API et met à jour le stockage local (nom, e-mail). */
+export async function refreshProfileFromApi() {
+  const data = await apiFetch("/api/auth/me");
+  if (data?.name) {
+    setSessionUser({
+      name: data.name,
+      email: typeof data.email === "string" ? data.email : "",
+    });
+  }
+  return data;
+}
+
 export function logout() {
   localStorage.removeItem("taskflow_token");
   clearSessionUser();

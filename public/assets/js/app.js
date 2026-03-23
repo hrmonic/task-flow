@@ -1,3 +1,4 @@
+import { openAccountModal } from "./accountModal.js";
 import { apiFetch } from "./api.js";
 import {
   login,
@@ -5,6 +6,7 @@ import {
   logout,
   getToken,
   getSessionUser,
+  refreshProfileFromApi,
 } from "./auth.js";
 import { loadBoard } from "./kanban.js";
 
@@ -63,6 +65,19 @@ function wireShellNavigation() {
       toggle.setAttribute("aria-expanded", String(open));
     });
   }
+}
+
+function wireAccountModal() {
+  document.getElementById("openAccountBtn")?.addEventListener("click", async () => {
+    await openAccountModal();
+    refreshNavUser();
+    const nav = document.getElementById("navMain");
+    const toggle = document.getElementById("navToggle");
+    if (nav && toggle) {
+      nav.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
 }
 
 function syncBoardEditorFromState() {
@@ -491,6 +506,7 @@ document.getElementById("logoutBtn").onclick = () => {
 };
 
 wireShellNavigation();
+wireAccountModal();
 
 if (getToken()) {
   document.getElementById("logoutBtn").hidden = false;
@@ -498,8 +514,12 @@ if (getToken()) {
   document.getElementById("authSection").hidden = true;
   document.getElementById("authSection").replaceChildren();
   setAuthenticatedShell(true);
-  refreshNavUser();
-  bootstrapBoard();
+  refreshProfileFromApi()
+    .catch(() => {})
+    .finally(() => {
+      refreshNavUser();
+      bootstrapBoard();
+    });
 } else {
   setAuthenticatedShell(false);
   refreshNavUser();

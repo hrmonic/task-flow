@@ -1,0 +1,132 @@
+<style>
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 4px 0; }
+.ba-panel { border-radius: 12px; overflow: hidden; border: 0.5px solid var(--color-border-tertiary); }
+.ba-label { font-size: 11px; font-weight: 500; padding: 8px 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.ba-label.before { background: #1a1a1a; color: #666; border-bottom: 0.5px solid #2a2a2a; }
+.ba-label.after { background: #0D0E14; color: #6366F1; border-bottom: 0.5px solid #1C1D27; }
+.ba-content { padding: 12px; }
+.ba-content.before { background: #1e1e2e; }
+.ba-content.after { background: #0D0E14; }
+
+.mock-col-old { background: #2a2a3e; border-radius: 4px; padding: 8px; margin-bottom: 8px; border: 1px solid #444; }
+.mock-col-old .col-head-old { font-size: 11px; color: #aaa; margin-bottom: 6px; font-family: monospace; }
+.mock-card-old { background: #333; border-radius: 3px; padding: 6px 8px; margin-bottom: 4px; font-size: 11px; color: #ddd; border-left: 3px solid #666; }
+
+.mock-sidebar { background: #08090E; width: 140px; border-radius: 8px; padding: 10px; display: inline-block; vertical-align: top; margin-right: 8px; }
+.mock-board-area { display: inline-block; vertical-align: top; width: calc(100% - 165px); }
+.mock-logo-new { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
+.mock-logo-icon { width: 20px; height: 20px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 5px; }
+.mock-logo-text { font-size: 12px; font-weight: 700; color: #F1F0FF; font-family: sans-serif; }
+.mock-board-item { font-size: 10px; padding: 5px 7px; border-radius: 5px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; color: #9B9AC8; }
+.mock-board-item.active { background: #1C1D27; color: #F1F0FF; border-left: 2px solid #6366F1; }
+.mock-board-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; }
+.mock-col-new { background: #13141C; border-radius: 10px; padding: 10px; width: 120px; display: inline-block; vertical-align: top; margin-right: 6px; border: 0.5px solid rgba(255,255,255,0.06); }
+.mock-col-head { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+.mock-col-stripe { height: 3px; width: 24px; border-radius: 99px; }
+.mock-col-name { font-size: 10px; font-weight: 600; color: #F1F0FF; font-family: sans-serif; }
+.mock-col-count { font-size: 9px; background: #1C1D27; color: #9B9AC8; padding: 1px 5px; border-radius: 99px; margin-left: auto; }
+.mock-card-new { background: #1C1D27; border-radius: 7px; padding: 7px 8px; margin-bottom: 5px; border: 0.5px solid rgba(255,255,255,0.07); transition: all 0.15s; }
+.mock-card-new:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+.mock-card-title { font-size: 10px; color: #F1F0FF; font-family: sans-serif; margin-bottom: 5px; line-height: 1.3; }
+.mock-card-footer { display: flex; align-items: center; justify-content: space-between; }
+.mock-priority { font-size: 8px; font-weight: 600; padding: 1.5px 5px; border-radius: 99px; display: flex; align-items: center; gap: 3px; }
+.mock-priority-dot { width: 4px; height: 4px; border-radius: 50%; }
+.p-urgent { background: rgba(239,68,68,0.12); color: #EF4444; }
+.p-urgent .mock-priority-dot { background: #EF4444; }
+.p-high { background: rgba(249,115,22,0.12); color: #F97316; }
+.p-high .mock-priority-dot { background: #F97316; }
+.p-medium { background: rgba(234,179,8,0.12); color: #EAB308; }
+.p-medium .mock-priority-dot { background: #EAB308; }
+.mock-date { font-size: 8px; color: #5C5B7A; font-family: monospace; }
+.mock-add-btn { width: 100%; background: transparent; border: 1px dashed rgba(255,255,255,0.1); border-radius: 7px; height: 28px; font-size: 9px; color: #5C5B7A; cursor: pointer; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.diff-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+.diff-before { font-size: 11px; color: #EF4444; flex: 1; }
+.diff-after { font-size: 11px; color: #10B981; flex: 1; }
+.diff-arrow { font-size: 10px; color: #5C5B7A; padding-top: 1px; }
+</style>
+
+<div class="ba-grid">
+  <div class="ba-panel">
+    <div class="ba-label before">Avant — Bootstrap générique</div>
+    <div class="ba-content before">
+      <div class="mock-col-old">
+        <div class="col-head-old">sdfsdfds · 2 tâches</div>
+        <div class="mock-card-old">sdfsdf · sdfsdf</div>
+        <div class="mock-card-old">wcvxwcvxcv · cwwwxcv</div>
+        <button style="width:100%;background:#3a3a50;border:none;color:#888;font-size:10px;padding:4px;border-radius:3px;cursor:pointer;margin-top:4px">+ Ajouter une tâche</button>
+      </div>
+      <div class="mock-col-old">
+        <div class="col-head-old">dsfsdfsd · 2 tâches</div>
+        <div class="mock-card-old">dsfsdf · sdfsdf</div>
+        <div class="mock-card-old">sdfsdfsdf · sdfsdf</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ba-panel">
+    <div class="ba-label after">Après — Precision Dark</div>
+    <div class="ba-content after">
+      <div style="display:flex;gap:0">
+        <div class="mock-sidebar">
+          <div class="mock-logo-new">
+            <div class="mock-logo-icon"></div>
+            <span class="mock-logo-text">TaskFlow</span>
+          </div>
+          <div style="font-size:9px;color:#3A3958;letter-spacing:0.08em;margin-bottom:6px;padding-left:7px">TABLEAUX</div>
+          <div class="mock-board-item active"><div class="mock-board-dot" style="background:#6366F1"></div>Sprint 12</div>
+          <div class="mock-board-item"><div class="mock-board-dot" style="background:#8B5CF6"></div>Backlog</div>
+          <div class="mock-board-item"><div class="mock-board-dot" style="background:#06B6D4"></div>Archive</div>
+        </div>
+        <div class="mock-board-area">
+          <div class="mock-col-new">
+            <div class="mock-col-head">
+              <div class="mock-col-stripe" style="background:#6366F1"></div>
+              <span class="mock-col-name">À faire</span>
+              <span class="mock-col-count">2</span>
+            </div>
+            <div class="mock-card-new">
+              <div class="mock-card-title">Refaire la home page du site</div>
+              <div class="mock-card-footer">
+                <span class="mock-priority p-urgent"><span class="mock-priority-dot"></span>Urgent</span>
+                <span class="mock-date">Demain</span>
+              </div>
+            </div>
+            <div class="mock-card-new">
+              <div class="mock-card-title">Audit SEO technique</div>
+              <div class="mock-card-footer">
+                <span class="mock-priority p-medium"><span class="mock-priority-dot"></span>Moyen</span>
+                <span class="mock-date">Dans 5j</span>
+              </div>
+            </div>
+            <div class="mock-add-btn">+ Ajouter</div>
+          </div>
+          <div class="mock-col-new">
+            <div class="mock-col-head">
+              <div class="mock-col-stripe" style="background:#8B5CF6"></div>
+              <span class="mock-col-name">En cours</span>
+              <span class="mock-col-count">1</span>
+            </div>
+            <div class="mock-card-new">
+              <div class="mock-card-title">API REST endpoints auth</div>
+              <div class="mock-card-footer">
+                <span class="mock-priority p-high"><span class="mock-priority-dot"></span>Haute</span>
+                <span class="mock-date">Aujourd'hui</span>
+              </div>
+            </div>
+            <div class="mock-add-btn">+ Ajouter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:16px;padding:12px;background:var(--color-background-secondary);border-radius:10px;border:0.5px solid var(--color-border-tertiary)">
+  <p style="font-size:11px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px;text-transform:uppercase;letter-spacing:0.06em">Ce qui change</p>
+  <div class="diff-row"><span class="diff-before">Bootstrap générique, couleurs par défaut</span><span class="diff-arrow">→</span><span class="diff-after">Design system custom, identité forte</span></div>
+  <div class="diff-row"><span class="diff-before">Colonnes sans hiérarchie visuelle</span><span class="diff-arrow">→</span><span class="diff-after">Indicateur coloré + typographie claire</span></div>
+  <div class="diff-row"><span class="diff-before">Cartes plates, aucun contexte</span><span class="diff-arrow">→</span><span class="diff-after">Badge priorité + date relative + hover lift</span></div>
+  <div class="diff-row"><span class="diff-before">Gestion boards dans le header — confus</span><span class="diff-arrow">→</span><span class="diff-after">Sidebar dédiée, navigation claire</span></div>
+  <div class="diff-row"><span class="diff-before">Zéro raccourci clavier</span><span class="diff-arrow">→</span><span class="diff-after">N / C / Ctrl+K / Escape / Ctrl+Z</span></div>
+  <div class="diff-row"><span class="diff-before">Chargement brutal sans feedback</span><span class="diff-arrow">→</span><span class="diff-after">Skeleton loaders + optimistic UI</span></div>
+</div>

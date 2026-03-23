@@ -94,4 +94,35 @@ final class AuthController
         }
         ResponseService::json(true, $user, null);
     }
+
+    public function changePassword(string $userId, array $payload): void
+    {
+        try {
+            $current = ValidationService::requiredString($payload, 'current_password', 8, 200);
+            $newPlain = ValidationService::requiredString($payload, 'new_password', 8, 200);
+            if ($current === $newPlain) {
+                ResponseService::json(
+                    false,
+                    null,
+                    "Le nouveau mot de passe doit être différent de l'actuel.",
+                    [],
+                    422
+                );
+
+                return;
+            }
+
+            $hash = $this->users->findPasswordHashById($userId);
+            if ($hash === null || !password_verify($current, $hash)) {
+                ResponseService::json(false, null, 'Mot de passe actuel incorrect.', [], 422);
+
+                return;
+            }
+
+            $this->users->updatePasswordHash($userId, password_hash($newPlain, PASSWORD_ARGON2ID));
+            ResponseService::json(true, ['updated' => true], null);
+        } catch (Throwable $e) {
+            ResponseService::json(false, null, $e->getMessage(), [], 422);
+        }
+    }
 }

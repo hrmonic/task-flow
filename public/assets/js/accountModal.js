@@ -99,6 +99,25 @@ export async function openAccountModal() {
           <dt>Dernière connexion</dt><dd>${lastLogin}</dd>
         </dl>
         <p class="account-hint">Les données proviennent du serveur lorsque la session est valide.</p>
+        <div class="account-password" aria-labelledby="accountPasswordTitle">
+          <h4 id="accountPasswordTitle" class="account-password-title">Changer le mot de passe</h4>
+          <div id="accountPasswordError" class="auth-error account-password-error" hidden role="alert"></div>
+          <div class="modal-field">
+            <label for="accountCurrentPassword">Mot de passe actuel</label>
+            <input id="accountCurrentPassword" type="password" autocomplete="current-password" minlength="8" />
+          </div>
+          <div class="modal-field">
+            <label for="accountNewPassword">Nouveau mot de passe</label>
+            <input id="accountNewPassword" type="password" autocomplete="new-password" minlength="8" />
+          </div>
+          <div class="modal-field">
+            <label for="accountNewPasswordConfirm">Confirmer le nouveau mot de passe</label>
+            <input id="accountNewPasswordConfirm" type="password" autocomplete="new-password" minlength="8" />
+          </div>
+          <div class="account-password-actions">
+            <button type="button" id="accountPasswordSubmit" class="btn">Mettre à jour le mot de passe</button>
+          </div>
+        </div>
         <div class="modal-actions">
           <button type="button" id="closeAccountBtn" class="btn secondary">Fermer</button>
         </div>
@@ -127,6 +146,62 @@ export async function openAccountModal() {
   modal.querySelector(".modal-backdrop")?.addEventListener("click", close);
   document.getElementById("closeAccountBtn")?.addEventListener("click", close);
   document.getElementById("accountModalDismiss")?.addEventListener("click", close);
+
+  const pwdErr = document.getElementById("accountPasswordError");
+  const setPwdErr = (msg = "") => {
+    if (!pwdErr) return;
+    pwdErr.textContent = msg;
+    pwdErr.hidden = !msg;
+  };
+
+  document.getElementById("accountPasswordSubmit")?.addEventListener("click", async () => {
+    setPwdErr("");
+    const cur = document.getElementById("accountCurrentPassword");
+    const neu = document.getElementById("accountNewPassword");
+    const conf = document.getElementById("accountNewPasswordConfirm");
+    if (!cur || !neu || !conf) return;
+    const current_password = cur.value;
+    const new_password = neu.value;
+    const c2 = conf.value;
+    if (current_password.length < 8) {
+      setPwdErr("Le mot de passe actuel doit contenir au moins 8 caractères.");
+      cur.focus();
+      return;
+    }
+    if (new_password.length < 8) {
+      setPwdErr("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+      neu.focus();
+      return;
+    }
+    if (new_password !== c2) {
+      setPwdErr("La confirmation ne correspond pas au nouveau mot de passe.");
+      conf.focus();
+      return;
+    }
+    try {
+      await apiFetch("/api/auth/password", {
+        method: "PATCH",
+        body: JSON.stringify({ current_password, new_password }),
+      });
+      cur.value = "";
+      neu.value = "";
+      conf.value = "";
+      setPwdErr("");
+      const ok = document.createElement("p");
+      ok.className = "account-password-success";
+      ok.setAttribute("role", "status");
+      ok.textContent = "Mot de passe mis à jour.";
+      const box = modal.querySelector(".account-password");
+      const old = box?.querySelector(".account-password-success");
+      old?.remove();
+      box?.appendChild(ok);
+      setTimeout(() => ok.remove(), 4000);
+    } catch (e) {
+      setPwdErr(
+        e instanceof Error ? e.message : "Impossible de mettre à jour le mot de passe.",
+      );
+    }
+  });
 
   requestAnimationFrame(() => document.getElementById("closeAccountBtn")?.focus());
 }

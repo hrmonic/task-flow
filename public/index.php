@@ -109,6 +109,7 @@ $router->post('/api/auth/register', fn(array $params) => $authController->regist
 $router->post('/api/auth/login', fn(array $params) => $authController->login($params));
 $router->post('/api/auth/refresh', fn(array $params) => $authController->refresh($params));
 $router->get('/api/auth/me', fn(array $params) => $auth->run(fn(string $userId) => $authController->me($userId, $params)));
+$router->patch('/api/auth/password', fn(array $params) => $auth->run(fn(string $userId) => $authController->changePassword($userId, $params)));
 
 $router->get('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->index($userId, $params)));
 $router->post('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->create($userId, $params)));

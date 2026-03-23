@@ -38,6 +38,21 @@ final class UserRepository
     /**
      * @return array{id: string, name: string, email: string, created_at: string, last_login_at: ?string}|null
      */
+    public function findPasswordHashById(string $id): ?string
+    {
+        $stmt = $this->pdo->prepare('SELECT password_hash FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $v = $stmt->fetchColumn();
+
+        return $v === false ? null : (string) $v;
+    }
+
+    public function updatePasswordHash(string $id, string $passwordHash): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE users SET password_hash = :h WHERE id = :id');
+        $stmt->execute(['h' => $passwordHash, 'id' => $id]);
+    }
+
     public function findPublicById(string $id): ?array
     {
         $stmt = $this->pdo->prepare(

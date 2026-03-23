@@ -39,6 +39,7 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
 - `GET /api/auth/me` (JWT) — profil : `id`, `name`, `email`, `created_at`, `last_login_at`
+- `PATCH /api/auth/password` (JWT) — corps : `current_password`, `new_password` (min. 8 caractères, Argon2id)
 
 ### Boards
 - `GET /api/boards`

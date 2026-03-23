@@ -36,6 +36,7 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
+- `GET /api/auth/me` (JWT) — profil : `id`, `name`, `email`, `created_at`, `last_login_at`
 
 ### Boards
 - `GET /api/boards`

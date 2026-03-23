@@ -34,4 +34,27 @@ final class UserRepository
         $stmt = $this->pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
+
+    /**
+     * @return array{id: string, name: string, email: string, created_at: string, last_login_at: ?string}|null
+     */
+    public function findPublicById(string $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, name, email, created_at, last_login_at FROM users WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch();
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'id' => (string) $row['id'],
+            'name' => (string) $row['name'],
+            'email' => (string) $row['email'],
+            'created_at' => (string) $row['created_at'],
+            'last_login_at' => $row['last_login_at'] !== null ? (string) $row['last_login_at'] : null,
+        ];
+    }
 }

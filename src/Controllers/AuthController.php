@@ -83,4 +83,15 @@ final class AuthController
             ResponseService::json(false, null, 'Invalid refresh token', [], 401);
         }
     }
+
+    public function me(string $userId, array $payload): void
+    {
+        $user = $this->users->findPublicById($userId);
+        if ($user === null) {
+            ResponseService::json(false, null, 'User not found', [], 404);
+
+            return;
+        }
+        ResponseService::json(true, $user, null);
+    }
 }

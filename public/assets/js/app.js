@@ -65,6 +65,23 @@ function wireShellNavigation() {
       toggle.setAttribute("aria-expanded", String(open));
     });
   }
+
+  const collapseNavIfDesktop = () => {
+    if (!nav || !toggle) return;
+    if (window.matchMedia("(min-width: 48rem)").matches) {
+      nav.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  };
+  window.addEventListener("resize", collapseNavIfDesktop);
+  collapseNavIfDesktop();
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !nav || !toggle) return;
+    if (!nav.classList.contains("is-open")) return;
+    nav.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+  });
 }
 
 function wireAccountModal() {

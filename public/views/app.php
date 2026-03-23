@@ -71,11 +71,17 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
         <button
           type="button"
           id="navToggle"
-          class="nav-toggle btn secondary"
+          class="nav-toggle"
           aria-controls="navMain"
           aria-expanded="false"
           aria-label="Ouvrir ou fermer le menu"
-        >Menu</button>
+        >
+          <span class="nav-toggle-bars" aria-hidden="true">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+          </span>
+        </button>
       </div>
       <nav id="navMain" class="main-nav" aria-label="Navigation principale">
         <ul class="main-nav-list">

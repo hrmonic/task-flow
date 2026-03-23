@@ -16,6 +16,8 @@ Kanban fullstack autonome en PHP 8.2 + MySQL + Vanilla JS + Docker.
 5. Ouvrir:
    - [http://localhost:8080](http://localhost:8080)
 
+Le client JS tente automatiquement `POST /api/auth/refresh` (cookie httpOnly) lors d’un **401** sur les routes API protégées, puis relance la requête une fois avec le nouveau JWT.
+
 ## Developpement local (PHP built-in server)
 
 Depuis la racine du projet, **utilise le router dédié** (recommandé) pour que `/assets/*` soit servi avec les bons types MIME:

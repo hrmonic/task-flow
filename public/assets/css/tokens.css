@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Design tokens — partagés par layout, kanban, components, auth.
  */
 :root {
@@ -49,4 +49,17 @@
   --auth-input-border-focus: #0ea5e9;
   --auth-placeholder-hex: #64748b;
   --auth-placeholder-hex-focus: #475569;
+}
+
+/* Alignement avec Bootstrap 5 (thème sombre) */
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--surface-deep);
+  --bs-body-color: var(--text);
+  --bs-secondary-color: var(--text-muted);
+  --bs-tertiary-bg: var(--surface-raised);
+  --bs-border-color: var(--border-subtle);
+  --bs-primary: #38bdf8;
+  --bs-primary-rgb: 56, 189, 248;
+  --bs-link-color: #7dd3fc;
+  --bs-link-hover-color: #bae6fd;
 }

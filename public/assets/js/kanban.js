@@ -98,14 +98,14 @@ export function renderBoard(columns) {
         <div class="tasks" data-drop-column="${colId}" role="list">
           ${tasksHtml}
         </div>
-        <button type="button" class="btn add-task" data-column-id="${colId}">+ Ajouter une tâche</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary add-task" data-column-id="${colId}">+ Ajouter une tâche</button>
       </section>`;
     })
     .join("");
 
   const addColumnHtml = `
     <section class="kanban-column kanban-column--add" aria-label="Ajouter une colonne">
-      <button type="button" class="btn secondary add-column-btn" data-board-id="${escapeHtml(boardId)}">+ Nouvelle colonne</button>
+      <button type="button" class="btn btn-outline-primary add-column-btn" data-board-id="${escapeHtml(boardId)}">+ Nouvelle colonne</button>
     </section>`;
 
   board.innerHTML = columnsHtml + addColumnHtml;

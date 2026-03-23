@@ -64,38 +64,40 @@ export function openTaskModal({ task = null, onSave, onDelete }) {
 
   modal.hidden = false;
   modal.innerHTML = `
-    <div class="modal-backdrop" aria-hidden="true"></div>
-    <div class="modal-panel">
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
-        <div class="modal-header">
+    <div class="tf-modal-backdrop" aria-hidden="true"></div>
+    <div class="tf-modal-panel">
+      <div class="tf-modal-content" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+        <div class="tf-modal-header">
           <h3 id="taskModalTitle">${isEdit ? "Modifier la tâche" : "Nouvelle tâche"}</h3>
-          <button type="button" class="modal-close" id="taskModalDismiss" aria-label="Fermer">×</button>
+          <button type="button" class="tf-modal-close" id="taskModalDismiss" aria-label="Fermer">×</button>
         </div>
-        <div class="modal-field">
-          <label for="taskTitle">Titre</label>
-          <input id="taskTitle" type="text" placeholder="Ex. Relire la documentation" maxlength="255" autocomplete="off" />
-        </div>
-        <div class="modal-field">
-          <label for="taskDescription">Description</label>
-          <textarea id="taskDescription" placeholder="Détails, liens, critères d’acceptation…"></textarea>
-        </div>
-        <div class="modal-field">
-          <label for="taskPriority">Priorité</label>
-          <select id="taskPriority">${priorityOptionsHtml(task?.priority || "medium")}</select>
-        </div>
-        <div class="modal-field">
-          <label for="taskDueDate">Échéance</label>
-          <input id="taskDueDate" type="date" />
-        </div>
-        <div class="modal-actions">
-          ${isEdit && typeof onDelete === "function" ? '<button type="button" id="deleteTaskBtn" class="btn danger">Supprimer</button>' : ""}
-          <button type="button" id="closeTaskBtn" class="btn secondary">Annuler</button>
-          <button type="button" id="saveTaskBtn" class="btn">${isEdit ? "Enregistrer" : "Créer"}</button>
+        <div class="tf-modal-body">
+          <div class="tf-modal-field">
+            <label class="form-label" for="taskTitle">Titre</label>
+            <input id="taskTitle" class="form-control" type="text" placeholder="Ex. Relire la documentation" maxlength="255" autocomplete="off" />
+          </div>
+          <div class="tf-modal-field">
+            <label class="form-label" for="taskDescription">Description</label>
+            <textarea id="taskDescription" class="form-control" rows="3" placeholder="Détails, liens, critères d’acceptation…"></textarea>
+          </div>
+          <div class="tf-modal-field">
+            <label class="form-label" for="taskPriority">Priorité</label>
+            <select id="taskPriority" class="form-select">${priorityOptionsHtml(task?.priority || "medium")}</select>
+          </div>
+          <div class="tf-modal-field">
+            <label class="form-label" for="taskDueDate">Échéance</label>
+            <input id="taskDueDate" class="form-control" type="date" />
+          </div>
+          <div class="tf-modal-actions">
+            ${isEdit && typeof onDelete === "function" ? '<button type="button" id="deleteTaskBtn" class="btn btn-outline-danger me-auto">Supprimer</button>' : ""}
+            <button type="button" id="closeTaskBtn" class="btn btn-outline-secondary">Annuler</button>
+            <button type="button" id="saveTaskBtn" class="btn btn-primary">${isEdit ? "Enregistrer" : "Créer"}</button>
+          </div>
         </div>
       </div>
     </div>`;
 
-  const backdrop = modal.querySelector(".modal-backdrop");
+  const backdrop = modal.querySelector(".tf-modal-backdrop");
   const dialog = modal.querySelector('[role="dialog"]');
   const titleInput = document.getElementById("taskTitle");
   const descInput = document.getElementById("taskDescription");

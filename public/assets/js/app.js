@@ -16,6 +16,54 @@ function setAuthenticatedShell(active) {
   document.body.classList.toggle("is-authenticated", active);
 }
 
+function getDashboardEl() {
+  return document.getElementById("dashboardSection");
+}
+
+function getBoardSectionEl() {
+  return document.getElementById("boardSection");
+}
+
+/** @param {"dashboard" | "boards" | "auth"} view */
+function showAppView(view) {
+  const dash = getDashboardEl();
+  const board = getBoardSectionEl();
+  const auth = document.getElementById("authSection");
+  if (view === "auth") {
+    if (dash) dash.hidden = true;
+    if (board) board.hidden = true;
+    if (auth) auth.hidden = false;
+    return;
+  }
+  if (!getToken()) return;
+  if (view === "dashboard") {
+    if (dash) dash.hidden = false;
+    if (board) board.hidden = true;
+    if (auth) auth.hidden = true;
+    return;
+  }
+  if (view === "boards") {
+    if (dash) dash.hidden = true;
+    if (board) board.hidden = false;
+    if (auth) auth.hidden = true;
+  }
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (id === "main-content") el.focus({ preventScroll: true });
+  }
+}
+
+function collapseBootstrapNav() {
+  const navEl = document.getElementById("navMain");
+  if (!navEl || !window.bootstrap?.Collapse) return;
+  const inst = window.bootstrap.Collapse.getInstance(navEl);
+  if (inst) inst.hide();
+}
+
 function refreshNavUser() {
   const el = document.getElementById("navUserLabel");
   if (!el) return;
@@ -30,71 +78,46 @@ function refreshNavUser() {
 }
 
 function wireShellNavigation() {
-  const nav = document.getElementById("navMain");
-  const toggle = document.getElementById("navToggle");
-
-  const scrollToTarget = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.hidden = false;
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      if (id === "main-content") el.focus({ preventScroll: true });
-    }
-  };
-
-  document.querySelectorAll("[data-nav-target]").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      const target = link.getAttribute("data-nav-target");
+  document.querySelectorAll("[data-nav-target]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      const target = el.getAttribute("data-nav-target");
       if (!target) return;
       e.preventDefault();
-      if (target === "main") scrollToTarget("main-content");
-      else if (target === "auth") scrollToTarget("authSection");
-      else if (target === "boards") scrollToTarget("boardSection");
-      else if (target === "footer") scrollToTarget("page-footer");
-      if (nav && toggle) {
-        nav.classList.remove("is-open");
-        toggle.setAttribute("aria-expanded", "false");
+      if (target === "main") {
+        if (getToken()) {
+          showAppView("dashboard");
+          scrollToSection("main-content");
+        } else {
+          showAppView("auth");
+          scrollToSection("authSection");
+        }
+      } else if (target === "auth") {
+        showAppView("auth");
+        scrollToSection("authSection");
+      } else if (target === "boards") {
+        if (!getToken()) {
+          showAppView("auth");
+          scrollToSection("authSection");
+          return;
+        }
+        showAppView("boards");
+        scrollToSection("boardSection");
+      } else if (target === "about") {
+        scrollToSection("aboutSection");
       }
+      collapseBootstrapNav();
     });
-  });
-
-  if (toggle && nav) {
-    toggle.addEventListener("click", () => {
-      const open = !nav.classList.contains("is-open");
-      nav.classList.toggle("is-open", open);
-      toggle.setAttribute("aria-expanded", String(open));
-    });
-  }
-
-  const collapseNavIfDesktop = () => {
-    if (!nav || !toggle) return;
-    if (window.matchMedia("(min-width: 48rem)").matches) {
-      nav.classList.remove("is-open");
-      toggle.setAttribute("aria-expanded", "false");
-    }
-  };
-  window.addEventListener("resize", collapseNavIfDesktop);
-  collapseNavIfDesktop();
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape" || !nav || !toggle) return;
-    if (!nav.classList.contains("is-open")) return;
-    nav.classList.remove("is-open");
-    toggle.setAttribute("aria-expanded", "false");
   });
 }
 
 function wireAccountModal() {
-  document.getElementById("openAccountBtn")?.addEventListener("click", async () => {
+  const open = async () => {
     await openAccountModal();
     refreshNavUser();
-    const nav = document.getElementById("navMain");
-    const toggle = document.getElementById("navToggle");
-    if (nav && toggle) {
-      nav.classList.remove("is-open");
-      toggle.setAttribute("aria-expanded", "false");
-    }
-  });
+    collapseBootstrapNav();
+  };
+  document.getElementById("openAccountBtn")?.addEventListener("click", open);
+  document.getElementById("openAccountFromDashboard")?.addEventListener("click", open);
 }
 
 function syncBoardEditorFromState() {
@@ -174,8 +197,8 @@ function showAuthMode(mode, options = {}) {
   registerForm.hidden = isLogin;
   loginForm.setAttribute("aria-hidden", String(!isLogin));
   registerForm.setAttribute("aria-hidden", String(isLogin));
-  tabLogin.classList.toggle("is-active", isLogin);
-  tabRegister.classList.toggle("is-active", !isLogin);
+  tabLogin.classList.toggle("active", isLogin);
+  tabRegister.classList.toggle("active", !isLogin);
   tabLogin.setAttribute("aria-selected", String(isLogin));
   tabRegister.setAttribute("aria-selected", String(!isLogin));
   tabLogin.tabIndex = isLogin ? 0 : -1;
@@ -191,97 +214,85 @@ function renderAuth() {
   if (!authSection) return;
   authSection.innerHTML = `
     <div class="auth-wrap">
-      <section class="auth-shell" aria-labelledby="authTitle">
+      <section class="mx-auto" style="max-width:28rem" aria-labelledby="authTitle">
         <div class="auth-head">
           <p class="auth-kicker">Votre espace Kanban</p>
-          <h1 id="authTitle">Bienvenue</h1>
+          <h1 id="authTitle" class="h2 fw-bold">Bienvenue</h1>
           <p class="auth-subtitle">Connectez-vous pour reprendre vos tableaux, ou créez un compte en moins d'une minute.</p>
         </div>
 
-        <div class="auth-switch" role="tablist" aria-label="Connexion ou inscription">
-          <button id="tabLogin" type="button" class="auth-switch-btn is-active" role="tab" aria-selected="true" aria-controls="loginForm" tabindex="0">
-            Connexion
-          </button>
-          <button id="tabRegister" type="button" class="auth-switch-btn" role="tab" aria-selected="false" aria-controls="registerForm" tabindex="-1">
-            Inscription
-          </button>
+        <div class="card auth-card bg-body-tertiary border-secondary shadow">
+          <div class="card-body p-3 p-md-4">
+            <ul class="nav nav-pills nav-fill gap-2 mb-4" role="tablist" aria-label="Connexion ou inscription">
+              <li class="nav-item" role="presentation">
+                <button id="tabLogin" type="button" class="nav-link active" role="tab" aria-selected="true" aria-controls="loginForm" tabindex="0">Connexion</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button id="tabRegister" type="button" class="nav-link" role="tab" aria-selected="false" aria-controls="registerForm" tabindex="-1">Inscription</button>
+              </li>
+            </ul>
+
+            <form id="loginForm" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+              <h3 class="h5 fw-semibold mb-3" id="loginFormHeading">Connexion</h3>
+              <div id="loginError" class="alert alert-danger py-2 small" hidden role="alert" aria-live="assertive"></div>
+              <fieldset class="border-0 p-0 m-0">
+                <legend class="visually-hidden">Identifiants</legend>
+                <div class="mb-3">
+                  <label class="form-label" for="loginEmail">Adresse e-mail</label>
+                  <input id="loginEmail" name="email" class="form-control" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label" for="loginPassword">Mot de passe</label>
+                  <div class="input-group">
+                    <input id="loginPassword" name="password" class="form-control" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
+                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="loginPassword" aria-controls="loginPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                  </div>
+                </div>
+              </fieldset>
+              <button id="loginBtn" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Se connecter</button>
+              <p class="text-center text-secondary small mt-3 mb-0">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="btn btn-link btn-sm p-0 align-baseline">Créer un compte</button></p>
+            </form>
+
+            <form id="registerForm" role="tabpanel" aria-labelledby="tabRegister" hidden novalidate aria-hidden="true">
+              <h3 class="h5 fw-semibold mb-3" id="registerFormHeading">Inscription</h3>
+              <div id="registerError" class="alert alert-danger py-2 small" hidden role="alert" aria-live="assertive"></div>
+              <fieldset class="border-0 p-0 m-0">
+                <legend class="visually-hidden">Nouveau compte</legend>
+                <div class="mb-3">
+                  <label class="form-label" for="registerName">Nom complet</label>
+                  <input id="registerName" name="name" class="form-control" type="text" placeholder="Jean Dupont" autocomplete="name" minlength="2" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="registerEmail">Adresse e-mail</label>
+                  <input id="registerEmail" name="email" class="form-control" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="registerPassword">Mot de passe</label>
+                  <div class="input-group">
+                    <input id="registerPassword" name="password" class="form-control" type="password" placeholder="Au moins 8 caractères" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="registerPassword" aria-controls="registerPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label" for="registerPasswordConfirm">Confirmer le mot de passe</label>
+                  <div class="input-group">
+                    <input id="registerPasswordConfirm" name="password_confirm" class="form-control" type="password" placeholder="Répétez le mot de passe" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="registerPasswordConfirm" aria-controls="registerPasswordConfirm" aria-pressed="false" aria-label="Afficher la confirmation du mot de passe">Voir</button>
+                  </div>
+                </div>
+              </fieldset>
+              <button id="registerBtn" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Créer mon compte</button>
+              <p class="text-center text-secondary small mt-3 mb-0">Déjà inscrit ? <button id="goToLoginBtn" type="button" class="btn btn-link btn-sm p-0 align-baseline">Se connecter</button></p>
+            </form>
+          </div>
         </div>
-
-        <form id="loginForm" class="auth-card" role="tabpanel" aria-labelledby="tabLogin" novalidate>
-          <div class="auth-card-surface">
-            <h3 class="auth-form-title" id="loginFormHeading">Connexion</h3>
-            <div id="loginError" class="auth-error" hidden role="alert" aria-live="assertive"></div>
-
-            <div class="auth-fields-frame">
-              <fieldset class="auth-fields-group">
-                <legend>Identifiants</legend>
-                <div class="auth-field">
-                  <label for="loginEmail">Adresse e-mail</label>
-                  <input id="loginEmail" name="email" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
-                </div>
-
-                <div class="auth-field">
-                  <label for="loginPassword">Mot de passe</label>
-                  <div class="auth-input-row">
-                    <input id="loginPassword" name="password" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
-                    <button type="button" class="auth-reveal-btn" data-reveal-target="loginPassword" aria-controls="loginPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
-                  </div>
-                </div>
-              </fieldset>
-            </div>
-
-            <button id="loginBtn" type="submit" class="btn auth-primary auth-card-submit">Se connecter</button>
-            <p class="auth-footnote">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="auth-inline-link">Créer un compte</button></p>
-          </div>
-        </form>
-
-        <form id="registerForm" class="auth-card" role="tabpanel" aria-labelledby="tabRegister" hidden novalidate aria-hidden="true">
-          <div class="auth-card-surface">
-            <h3 class="auth-form-title" id="registerFormHeading">Inscription</h3>
-            <div id="registerError" class="auth-error" hidden role="alert" aria-live="assertive"></div>
-
-            <div class="auth-fields-frame">
-              <fieldset class="auth-fields-group">
-                <legend>Nouveau compte</legend>
-                <div class="auth-field">
-                  <label for="registerName">Nom complet</label>
-                  <input id="registerName" name="name" type="text" placeholder="Jean Dupont" autocomplete="name" minlength="2" required>
-                </div>
-
-                <div class="auth-field">
-                  <label for="registerEmail">Adresse e-mail</label>
-                  <input id="registerEmail" name="email" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
-                </div>
-
-                <div class="auth-field">
-                  <label for="registerPassword">Mot de passe</label>
-                  <div class="auth-input-row">
-                    <input id="registerPassword" name="password" type="password" placeholder="Au moins 8 caractères" autocomplete="new-password" minlength="8" required>
-                    <button type="button" class="auth-reveal-btn" data-reveal-target="registerPassword" aria-controls="registerPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
-                  </div>
-                </div>
-
-                <div class="auth-field">
-                  <label for="registerPasswordConfirm">Confirmer le mot de passe</label>
-                  <div class="auth-input-row">
-                    <input id="registerPasswordConfirm" name="password_confirm" type="password" placeholder="Répétez le mot de passe" autocomplete="new-password" minlength="8" required>
-                    <button type="button" class="auth-reveal-btn" data-reveal-target="registerPasswordConfirm" aria-controls="registerPasswordConfirm" aria-pressed="false" aria-label="Afficher la confirmation du mot de passe">Voir</button>
-                  </div>
-                </div>
-              </fieldset>
-            </div>
-
-            <button id="registerBtn" type="submit" class="btn auth-primary auth-card-submit">Créer mon compte</button>
-            <p class="auth-footnote">Déjà inscrit ? <button id="goToLoginBtn" type="button" class="auth-inline-link">Se connecter</button></p>
-          </div>
-        </form>
       </section>
     </div>`;
 
   authSection.setAttribute("aria-busy", "false");
   wirePasswordRevealButtons(authSection);
 
-  const tablist = authSection.querySelector(".auth-switch");
+  const tablist = authSection.querySelector('[role="tablist"]');
   if (tablist) {
     tablist.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -390,7 +401,7 @@ async function bootstrapBoard() {
   logoutBtn.hidden = false;
   authSection.hidden = true;
   authSection.replaceChildren();
-  boardSection.hidden = false;
+  showAppView("dashboard");
 
   try {
     state.boards = await apiFetch("/api/boards");
@@ -408,7 +419,7 @@ async function bootstrapBoard() {
   } catch (err) {
     kanban.replaceChildren();
     const msg = document.createElement("p");
-    msg.className = "board-inline-error";
+    msg.className = "board-inline-error mb-0";
     msg.setAttribute("role", "alert");
     msg.textContent =
       err instanceof Error
@@ -527,10 +538,10 @@ wireAccountModal();
 
 if (getToken()) {
   document.getElementById("logoutBtn").hidden = false;
-  document.getElementById("boardSection").hidden = false;
   document.getElementById("authSection").hidden = true;
   document.getElementById("authSection").replaceChildren();
   setAuthenticatedShell(true);
+  showAppView("dashboard");
   refreshProfileFromApi()
     .catch(() => {})
     .finally(() => {
@@ -541,7 +552,6 @@ if (getToken()) {
   setAuthenticatedShell(false);
   refreshNavUser();
   document.getElementById("logoutBtn").hidden = true;
-  document.getElementById("boardSection").hidden = true;
-  document.getElementById("authSection").hidden = false;
+  showAppView("auth");
   renderAuth();
 }

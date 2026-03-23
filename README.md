@@ -28,7 +28,7 @@ php -S localhost:8080 -t public public/router.php
 
 Alternative (moins fiable selon l’OS): `php -S localhost:8080 -t public public/index.php` — `index.php` tente aussi de servir `/assets/` manuellement.
 
-Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS** (`text/css`), pas du **JSON**.
+Verification: `http://localhost:8080/assets/css/taskflow.css` doit renvoyer du **CSS** (`text/css`), pas du **JSON**.
 
 **Sans CSS charge**, la classe `.hidden` ne masque rien: l’app utilise l’attribut HTML `hidden` pour le board / logout tant que le JS n’a pas fini, afin d’éviter d’afficher le Kanban avant connexion.
 
@@ -69,7 +69,7 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 - Ownership checks sur board/column/task
 - CORS configuré
 - Rate limit simple par IP (60/min)
-- Security headers (nosniff, frame options, CSP)
+- Security headers (nosniff, frame options, CSP) — Bootstrap est servi en local (`public/assets/vendor/bootstrap/`) pour respecter `style-src` / `script-src 'self'`
 - CSRF : session PHP (`taskflow_sid`) + jeton dans `<meta name="csrf-token">` ; le client envoie `X-CSRF-Token` sur toutes les requêtes API qui modifient des données (`POST` / `PATCH` / `DELETE` / `PUT`), sauf `POST /api/auth/register` et `POST /api/auth/login`. Les réponses `register`, `login` et `refresh` incluent `csrf_token` pour mettre à jour la meta. Sans jeton valide → `403`.
 
 ## Vérification rapide

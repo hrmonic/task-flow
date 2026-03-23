@@ -85,41 +85,43 @@ export async function openAccountModal() {
 
   modal.hidden = false;
   modal.innerHTML = `
-    <div class="modal-backdrop" aria-hidden="true"></div>
-    <div class="modal-panel">
-      <div class="modal-content modal-content--account" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
-        <div class="modal-header">
+    <div class="tf-modal-backdrop" aria-hidden="true"></div>
+    <div class="tf-modal-panel tf-modal-panel--wide">
+      <div class="tf-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+        <div class="tf-modal-header">
           <h3 id="accountModalTitle">Mon compte</h3>
-          <button type="button" class="modal-close" id="accountModalDismiss" aria-label="Fermer">×</button>
+          <button type="button" class="tf-modal-close" id="accountModalDismiss" aria-label="Fermer">×</button>
         </div>
-        <dl class="account-dl">
-          <dt>Nom</dt><dd>${name}</dd>
-          <dt>E-mail</dt><dd>${email}</dd>
-          <dt>Compte créé</dt><dd>${created}</dd>
-          <dt>Dernière connexion</dt><dd>${lastLogin}</dd>
-        </dl>
-        <p class="account-hint">Les données proviennent du serveur lorsque la session est valide.</p>
-        <div class="account-password" aria-labelledby="accountPasswordTitle">
-          <h4 id="accountPasswordTitle" class="account-password-title">Changer le mot de passe</h4>
-          <div id="accountPasswordError" class="auth-error account-password-error" hidden role="alert"></div>
-          <div class="modal-field">
-            <label for="accountCurrentPassword">Mot de passe actuel</label>
-            <input id="accountCurrentPassword" type="password" autocomplete="current-password" minlength="8" />
+        <div class="tf-modal-body">
+          <dl class="account-dl">
+            <dt>Nom</dt><dd>${name}</dd>
+            <dt>E-mail</dt><dd>${email}</dd>
+            <dt>Compte créé</dt><dd>${created}</dd>
+            <dt>Dernière connexion</dt><dd>${lastLogin}</dd>
+          </dl>
+          <p class="account-hint">Les données proviennent du serveur lorsque la session est valide.</p>
+          <div class="account-password border-top border-secondary pt-3 mt-2" aria-labelledby="accountPasswordTitle">
+            <h4 id="accountPasswordTitle" class="account-password-title">Changer le mot de passe</h4>
+            <div id="accountPasswordError" class="alert alert-danger py-2 small" hidden role="alert"></div>
+            <div class="tf-modal-field">
+              <label class="form-label" for="accountCurrentPassword">Mot de passe actuel</label>
+              <input id="accountCurrentPassword" class="form-control" type="password" autocomplete="current-password" minlength="8" />
+            </div>
+            <div class="tf-modal-field">
+              <label class="form-label" for="accountNewPassword">Nouveau mot de passe</label>
+              <input id="accountNewPassword" class="form-control" type="password" autocomplete="new-password" minlength="8" />
+            </div>
+            <div class="tf-modal-field">
+              <label class="form-label" for="accountNewPasswordConfirm">Confirmer le nouveau mot de passe</label>
+              <input id="accountNewPasswordConfirm" class="form-control" type="password" autocomplete="new-password" minlength="8" />
+            </div>
+            <div class="account-password-actions">
+              <button type="button" id="accountPasswordSubmit" class="btn btn-primary">Mettre à jour le mot de passe</button>
+            </div>
           </div>
-          <div class="modal-field">
-            <label for="accountNewPassword">Nouveau mot de passe</label>
-            <input id="accountNewPassword" type="password" autocomplete="new-password" minlength="8" />
+          <div class="tf-modal-actions">
+            <button type="button" id="closeAccountBtn" class="btn btn-outline-secondary">Fermer</button>
           </div>
-          <div class="modal-field">
-            <label for="accountNewPasswordConfirm">Confirmer le nouveau mot de passe</label>
-            <input id="accountNewPasswordConfirm" type="password" autocomplete="new-password" minlength="8" />
-          </div>
-          <div class="account-password-actions">
-            <button type="button" id="accountPasswordSubmit" class="btn">Mettre à jour le mot de passe</button>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="closeAccountBtn" class="btn secondary">Fermer</button>
         </div>
       </div>
     </div>`;
@@ -143,7 +145,7 @@ export async function openAccountModal() {
   };
   document.addEventListener("keydown", onDocumentKeydown);
 
-  modal.querySelector(".modal-backdrop")?.addEventListener("click", close);
+  modal.querySelector(".tf-modal-backdrop")?.addEventListener("click", close);
   document.getElementById("closeAccountBtn")?.addEventListener("click", close);
   document.getElementById("accountModalDismiss")?.addEventListener("click", close);
 

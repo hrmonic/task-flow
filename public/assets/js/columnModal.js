@@ -50,24 +50,26 @@ export function openColumnModal({ column = null, onSave }) {
 
   modal.hidden = false;
   modal.innerHTML = `
-    <div class="modal-backdrop" aria-hidden="true"></div>
-    <div class="modal-panel">
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
-        <div class="modal-header">
+    <div class="tf-modal-backdrop" aria-hidden="true"></div>
+    <div class="tf-modal-panel">
+      <div class="tf-modal-content" role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
+        <div class="tf-modal-header">
           <h3 id="columnModalTitle">${isEdit ? "Modifier la colonne" : "Nouvelle colonne"}</h3>
-          <button type="button" class="modal-close" id="columnModalDismiss" aria-label="Fermer">×</button>
+          <button type="button" class="tf-modal-close" id="columnModalDismiss" aria-label="Fermer">×</button>
         </div>
-        <div class="modal-field">
-          <label for="columnName">Nom</label>
-          <input id="columnName" type="text" maxlength="120" autocomplete="off" />
-        </div>
-        <div class="modal-field">
-          <label for="columnColor">Couleur (barre du haut)</label>
-          <input id="columnColor" type="color" value="${escapeHtml(defaultColor)}" />
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="closeColumnBtn" class="btn secondary">Annuler</button>
-          <button type="button" id="saveColumnBtn" class="btn">${isEdit ? "Enregistrer" : "Créer"}</button>
+        <div class="tf-modal-body">
+          <div class="tf-modal-field">
+            <label class="form-label" for="columnName">Nom</label>
+            <input id="columnName" class="form-control" type="text" maxlength="120" autocomplete="off" />
+          </div>
+          <div class="tf-modal-field">
+            <label class="form-label" for="columnColor">Couleur (barre du haut)</label>
+            <input id="columnColor" class="form-control form-control-color w-100" type="color" value="${escapeHtml(defaultColor)}" title="Couleur de la colonne" />
+          </div>
+          <div class="tf-modal-actions">
+            <button type="button" id="closeColumnBtn" class="btn btn-outline-secondary">Annuler</button>
+            <button type="button" id="saveColumnBtn" class="btn btn-primary">${isEdit ? "Enregistrer" : "Créer"}</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -94,7 +96,7 @@ export function openColumnModal({ column = null, onSave }) {
   };
   document.addEventListener("keydown", onDocumentKeydown);
 
-  modal.querySelector(".modal-backdrop")?.addEventListener("click", close);
+  modal.querySelector(".tf-modal-backdrop")?.addEventListener("click", close);
   document.getElementById("closeColumnBtn")?.addEventListener("click", close);
   document.getElementById("columnModalDismiss")?.addEventListener("click", close);
 

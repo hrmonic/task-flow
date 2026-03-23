@@ -118,6 +118,7 @@ $router->delete('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $u
 
 $router->get('/api/boards/{id}/columns', fn(array $params) => $auth->run(fn(string $userId) => $columnController->index($userId, $params)));
 $router->post('/api/boards/{id}/columns', fn(array $params) => $auth->run(fn(string $userId) => $columnController->create($userId, $params)));
+$router->patch('/api/columns/{id}/move', fn(array $params) => $auth->run(fn(string $userId) => $columnController->move($userId, $params)));
 $router->patch('/api/columns/{id}', fn(array $params) => $auth->run(fn(string $userId) => $columnController->update($userId, $params)));
 $router->delete('/api/columns/{id}', fn(array $params) => $auth->run(fn(string $userId) => $columnController->delete($userId, $params)));
 

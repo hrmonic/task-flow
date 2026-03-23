@@ -83,14 +83,14 @@ export function renderBoard(columns) {
               </article>`;
         })
         .join("");
-      return `
+          return `
       <section class="kanban-column" data-column-id="${colId}" aria-label="Colonne ${colName}" style="--column-accent:${colColor}">
         <header class="column-header">
           <div class="column-header-row">
-            <h3>${colName}</h3>
+            <h3 class="column-drag-handle" draggable="true" title="Glisser pour déplacer la colonne">${colName}</h3>
             <div class="column-header-actions">
-              <button type="button" class="icon-btn column-edit-btn" data-column-id="${colId}" aria-label="Modifier la colonne ${colName}">✎</button>
-              <button type="button" class="icon-btn icon-btn--danger column-delete-btn" data-column-id="${colId}" aria-label="Supprimer la colonne ${colName}">🗑</button>
+              <button type="button" class="icon-btn column-edit-btn" draggable="false" data-column-id="${colId}" aria-label="Modifier la colonne ${colName}">✎</button>
+              <button type="button" class="icon-btn icon-btn--danger column-delete-btn" draggable="false" data-column-id="${colId}" aria-label="Supprimer la colonne ${colName}">🗑</button>
             </div>
           </div>
           <span class="column-task-count" aria-label="${col.tasks.length} tâche${col.tasks.length === 1 ? "" : "s"}">${col.tasks.length}</span>
@@ -227,11 +227,47 @@ function clearAllDropHighlights() {
   document.querySelectorAll("[data-drop-column].drop-hover").forEach((z) => {
     z.classList.remove("drop-hover");
   });
+  document.querySelectorAll("#kanbanBoard .kanban-column.column-drop-hover").forEach((el) => {
+    el.classList.remove("column-drop-hover");
+  });
+}
+
+function dataColumnSections(board) {
+  return [...board.querySelectorAll(".kanban-column:not(.kanban-column--add)")];
+}
+
+function insertColumnAtPointer(board, dragged, clientX) {
+  const siblings = dataColumnSections(board).filter((el) => el !== dragged);
+  let insertBefore = null;
+  for (const el of siblings) {
+    const rect = el.getBoundingClientRect();
+    const mid = rect.left + rect.width / 2;
+    if (clientX < mid) {
+      insertBefore = el;
+      break;
+    }
+  }
+  const addCol = board.querySelector(".kanban-column--add");
+  if (insertBefore) {
+    board.insertBefore(dragged, insertBefore);
+  } else if (addCol) {
+    board.insertBefore(dragged, addCol);
+  } else {
+    board.appendChild(dragged);
+  }
+}
+
+function columnDropPosition1Based(board, section) {
+  const cols = dataColumnSections(board);
+  const i = cols.indexOf(section);
+  return i >= 0 ? i + 1 : Math.max(1, cols.length);
 }
 
 export function initDragAndDrop() {
   let currentTaskId = null;
   let draggingEl = null;
+  let draggingColumnSection = null;
+  let currentColumnId = null;
 
   document.querySelectorAll(".task").forEach((task) => {
     task.addEventListener("dragstart", (e) => {
@@ -256,7 +292,60 @@ export function initDragAndDrop() {
     return;
   }
 
+  board.querySelectorAll(".column-drag-handle").forEach((handle) => {
+    handle.addEventListener("dragstart", (e) => {
+      const section = handle.closest(".kanban-column");
+      if (!section) {
+        return;
+      }
+      draggingColumnSection = section;
+      currentColumnId = section.dataset.columnId ?? null;
+      section.classList.add("is-column-dragging");
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", currentColumnId ? `column:${currentColumnId}` : "");
+      }
+    });
+    handle.addEventListener("dragend", () => {
+      const section = handle.closest(".kanban-column");
+      if (section) {
+        section.classList.remove("is-column-dragging");
+      }
+      clearAllDropHighlights();
+      draggingColumnSection = null;
+      currentColumnId = null;
+    });
+  });
+
   board.addEventListener("dragover", (e) => {
+    if (draggingColumnSection && currentColumnId) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      insertColumnAtPointer(board, draggingColumnSection, e.clientX);
+      const cols = dataColumnSections(board);
+      let hoverCol = null;
+      for (const el of cols) {
+        if (el === draggingColumnSection) {
+          continue;
+        }
+        const r = el.getBoundingClientRect();
+        if (
+          e.clientX >= r.left &&
+          e.clientX <= r.right &&
+          e.clientY >= r.top &&
+          e.clientY <= r.bottom
+        ) {
+          hoverCol = el;
+          break;
+        }
+      }
+      cols.forEach((c) => c.classList.remove("column-drop-hover"));
+      if (hoverCol) {
+        hoverCol.classList.add("column-drop-hover");
+      }
+      return;
+    }
+
     const zone = e.target.closest("[data-drop-column]");
     if (!zone || !draggingEl || !currentTaskId) {
       return;
@@ -281,6 +370,22 @@ export function initDragAndDrop() {
   });
 
   board.addEventListener("drop", async (e) => {
+    if (draggingColumnSection && currentColumnId) {
+      e.preventDefault();
+      clearAllDropHighlights();
+      insertColumnAtPointer(board, draggingColumnSection, e.clientX);
+      const position = columnDropPosition1Based(board, draggingColumnSection);
+      try {
+        await apiFetch(`/api/columns/${currentColumnId}/move`, {
+          method: "PATCH",
+          body: JSON.stringify({ position }),
+        });
+      } catch {
+        await reloadActiveBoard();
+      }
+      return;
+    }
+
     const zone = e.target.closest("[data-drop-column]");
     if (!zone || !currentTaskId || !draggingEl) {
       return;

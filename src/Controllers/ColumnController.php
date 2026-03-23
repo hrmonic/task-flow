@@ -70,4 +70,34 @@ final class ColumnController
         $this->columns->delete($columnId);
         ResponseService::json(true, ['deleted' => true], null);
     }
+
+    public function move(string $userId, array $payload): void
+    {
+        $columnId = (string) ($payload['id'] ?? '');
+        $position = (int) ($payload['position'] ?? 0);
+        if ($position < 1) {
+            ResponseService::json(false, null, 'Position invalide', [], 422);
+
+            return;
+        }
+        $boardId = $this->columns->boardIdByColumnId($columnId);
+        if (!$boardId || !$this->boards->belongsToUser($boardId, $userId)) {
+            ResponseService::json(false, null, 'Column not found', [], 404);
+
+            return;
+        }
+        try {
+            $this->columns->moveToPosition($columnId, $position);
+        } catch (Throwable $e) {
+            if ($e->getMessage() === 'Column not found') {
+                ResponseService::json(false, null, 'Column not found', [], 404);
+
+                return;
+            }
+            ResponseService::json(false, null, $e->getMessage(), [], 500);
+
+            return;
+        }
+        ResponseService::json(true, ['moved' => true], null);
+    }
 }

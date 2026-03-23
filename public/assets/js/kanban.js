@@ -1,7 +1,15 @@
+import { clearHistory, pushMoveSnapshot } from "./boardHistory.js";
 import { apiFetch } from "./api.js";
 import { openColumnModal } from "./columnModal.js";
-import { escapeHtml, taskPriorityClass } from "./escape.js";
+import {
+  escapeHtml,
+  formatRelativeDueDate,
+  taskPriorityClass,
+  taskPriorityLabel,
+} from "./escape.js";
 import { openTaskModal } from "./taskModal.js";
+
+let lastLoadedBoardId = null;
 
 function boardSelectValue() {
   const sel = document.getElementById("boardSelect");
@@ -12,10 +20,28 @@ export async function reloadActiveBoard() {
   await loadBoard(boardSelectValue());
 }
 
+function renderBoardSkeleton() {
+  const board = document.getElementById("kanbanBoard");
+  if (!board) return;
+  const col = () => `<div class="tf-skeleton-col" aria-hidden="true">
+      <div class="tf-skeleton-line tf-skeleton-line--short"></div>
+      <div class="tf-skeleton-card"></div>
+      <div class="tf-skeleton-card"></div>
+    </div>`;
+  board.innerHTML = `<div class="tf-skeleton-board">${col()}${col()}${col()}</div>`;
+}
+
 export async function loadBoard(boardId) {
   if (!boardId) return;
+  if (lastLoadedBoardId !== boardId) {
+    clearHistory();
+    lastLoadedBoardId = boardId;
+  }
   const board = document.getElementById("kanbanBoard");
-  if (board) board.setAttribute("aria-busy", "true");
+  if (board) {
+    board.setAttribute("aria-busy", "true");
+    renderBoardSkeleton();
+  }
   try {
     const columns = await apiFetch(`/api/boards/${boardId}/columns`);
     const withTasks = await Promise.all(
@@ -25,6 +51,9 @@ export async function loadBoard(boardId) {
       })),
     );
     renderBoard(withTasks);
+  } catch (err) {
+    if (board) board.replaceChildren();
+    throw err;
   } finally {
     if (board) board.setAttribute("aria-busy", "false");
   }
@@ -63,6 +92,7 @@ function wireTaskCard(taskEl, task) {
 
 export function renderBoard(columns) {
   const board = document.getElementById("kanbanBoard");
+  if (!board) return;
   const boardId = boardSelectValue();
   const columnsHtml = columns
     .map((col) => {
@@ -78,8 +108,17 @@ export function renderBoard(columns) {
           const title = escapeHtml(t.title);
           const desc = escapeHtml(t.description || "");
           const taskId = escapeHtml(t.id);
+          const prLabel = escapeHtml(taskPriorityLabel(t.priority));
+          const dueRel = formatRelativeDueDate(t.due_date);
+          const dueHtml = dueRel
+            ? `<span class="task-due">${escapeHtml(dueRel)}</span>`
+            : "";
           return `<article class="task priority-${pr}" draggable="true" data-task-id="${taskId}" tabindex="0" role="listitem" aria-label="Tâche : ${title}. Appuyez sur Entrée pour modifier.">
                 <h4>${title}</h4>${desc ? `<p>${desc}</p>` : ""}
+                <div class="task-card-footer">
+                  <span class="task-priority-pill task-priority-pill--${pr}"><span class="task-priority-dot" aria-hidden="true"></span>${prLabel}</span>
+                  ${dueHtml}
+                </div>
               </article>`;
         })
         .join("");
@@ -98,14 +137,14 @@ export function renderBoard(columns) {
         <div class="tasks" data-drop-column="${colId}" role="list">
           ${tasksHtml}
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary add-task" data-column-id="${colId}">+ Ajouter une tâche</button>
+        <button type="button" class="tf-btn tf-btn--ghost tf-btn--sm add-task" data-column-id="${colId}">+ Ajouter une tâche</button>
       </section>`;
     })
     .join("");
 
   const addColumnHtml = `
     <section class="kanban-column kanban-column--add" aria-label="Ajouter une colonne">
-      <button type="button" class="btn btn-outline-primary add-column-btn" data-board-id="${escapeHtml(boardId)}">+ Nouvelle colonne</button>
+      <button type="button" class="tf-btn tf-btn--primary tf-btn--sm add-column-btn" data-board-id="${escapeHtml(boardId)}">+ Nouvelle colonne</button>
     </section>`;
 
   board.innerHTML = columnsHtml + addColumnHtml;
@@ -268,12 +307,24 @@ export function initDragAndDrop() {
   let draggingEl = null;
   let draggingColumnSection = null;
   let currentColumnId = null;
+  /** @type {string | null} */
+  let dragTaskSourceColumnId = null;
+  /** @type {number | null} */
+  let dragTaskSourcePosition = null;
 
   document.querySelectorAll(".task").forEach((task) => {
     task.addEventListener("dragstart", (e) => {
       currentTaskId = task.dataset.taskId ?? null;
       draggingEl = task;
       task.classList.add("is-dragging");
+      const srcZone = task.closest(".tasks");
+      if (srcZone?.dataset.dropColumn) {
+        dragTaskSourceColumnId = srcZone.dataset.dropColumn;
+        dragTaskSourcePosition = taskDropPosition1Based(srcZone, task);
+      } else {
+        dragTaskSourceColumnId = null;
+        dragTaskSourcePosition = null;
+      }
       if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", currentTaskId ?? "");
@@ -284,6 +335,8 @@ export function initDragAndDrop() {
       clearAllDropHighlights();
       draggingEl = null;
       currentTaskId = null;
+      dragTaskSourceColumnId = null;
+      dragTaskSourcePosition = null;
     });
   });
 
@@ -401,6 +454,8 @@ export function initDragAndDrop() {
     insertTaskCardAtPointer(zone, draggingEl, e.clientY);
     const position = taskDropPosition1Based(zone, draggingEl);
 
+    const srcCol = dragTaskSourceColumnId;
+    const srcPos = dragTaskSourcePosition;
     try {
       await apiFetch(`/api/tasks/${currentTaskId}/move`, {
         method: "PATCH",
@@ -409,6 +464,18 @@ export function initDragAndDrop() {
           position,
         }),
       });
+      if (
+        srcCol &&
+        srcPos != null &&
+        currentTaskId &&
+        (srcCol !== newColumnId || srcPos !== position)
+      ) {
+        pushMoveSnapshot({
+          taskId: currentTaskId,
+          columnId: srcCol,
+          position: srcPos,
+        });
+      }
     } catch {
       await reloadActiveBoard();
     }

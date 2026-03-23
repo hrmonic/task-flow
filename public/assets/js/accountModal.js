@@ -100,27 +100,27 @@ export async function openAccountModal() {
             <dt>Dernière connexion</dt><dd>${lastLogin}</dd>
           </dl>
           <p class="account-hint">Les données proviennent du serveur lorsque la session est valide.</p>
-          <div class="account-password border-top border-secondary pt-3 mt-2" aria-labelledby="accountPasswordTitle">
+          <div class="account-password account-password-block" aria-labelledby="accountPasswordTitle">
             <h4 id="accountPasswordTitle" class="account-password-title">Changer le mot de passe</h4>
-            <div id="accountPasswordError" class="alert alert-danger py-2 small" hidden role="alert"></div>
+            <div id="accountPasswordError" class="tf-alert tf-alert--danger" hidden role="alert"></div>
             <div class="tf-modal-field">
-              <label class="form-label" for="accountCurrentPassword">Mot de passe actuel</label>
-              <input id="accountCurrentPassword" class="form-control" type="password" autocomplete="current-password" minlength="8" />
+              <label class="tf-label" for="accountCurrentPassword" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Mot de passe actuel</label>
+              <input id="accountCurrentPassword" class="tf-input" type="password" autocomplete="current-password" minlength="8" />
             </div>
             <div class="tf-modal-field">
-              <label class="form-label" for="accountNewPassword">Nouveau mot de passe</label>
-              <input id="accountNewPassword" class="form-control" type="password" autocomplete="new-password" minlength="8" />
+              <label class="tf-label" for="accountNewPassword" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Nouveau mot de passe</label>
+              <input id="accountNewPassword" class="tf-input" type="password" autocomplete="new-password" minlength="8" />
             </div>
             <div class="tf-modal-field">
-              <label class="form-label" for="accountNewPasswordConfirm">Confirmer le nouveau mot de passe</label>
-              <input id="accountNewPasswordConfirm" class="form-control" type="password" autocomplete="new-password" minlength="8" />
+              <label class="tf-label" for="accountNewPasswordConfirm" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Confirmer le nouveau mot de passe</label>
+              <input id="accountNewPasswordConfirm" class="tf-input" type="password" autocomplete="new-password" minlength="8" />
             </div>
             <div class="account-password-actions">
-              <button type="button" id="accountPasswordSubmit" class="btn btn-primary">Mettre à jour le mot de passe</button>
+              <button type="button" id="accountPasswordSubmit" class="tf-btn tf-btn--primary">Mettre à jour le mot de passe</button>
             </div>
           </div>
           <div class="tf-modal-actions">
-            <button type="button" id="closeAccountBtn" class="btn btn-outline-secondary">Fermer</button>
+            <button type="button" id="closeAccountBtn" class="tf-btn tf-btn--ghost">Fermer</button>
           </div>
         </div>
       </div>

@@ -73,25 +73,25 @@ export function openTaskModal({ task = null, onSave, onDelete }) {
         </div>
         <div class="tf-modal-body">
           <div class="tf-modal-field">
-            <label class="form-label" for="taskTitle">Titre</label>
-            <input id="taskTitle" class="form-control" type="text" placeholder="Ex. Relire la documentation" maxlength="255" autocomplete="off" />
+            <label class="tf-label" for="taskTitle" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Titre</label>
+            <input id="taskTitle" class="tf-input" type="text" placeholder="Ex. Relire la documentation" maxlength="255" autocomplete="off" />
           </div>
           <div class="tf-modal-field">
-            <label class="form-label" for="taskDescription">Description</label>
-            <textarea id="taskDescription" class="form-control" rows="3" placeholder="Détails, liens, critères d’acceptation…"></textarea>
+            <label class="tf-label" for="taskDescription" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Description</label>
+            <textarea id="taskDescription" class="tf-textarea" rows="3" placeholder="Détails, liens, critères d’acceptation…"></textarea>
           </div>
           <div class="tf-modal-field">
-            <label class="form-label" for="taskPriority">Priorité</label>
-            <select id="taskPriority" class="form-select">${priorityOptionsHtml(task?.priority || "medium")}</select>
+            <label class="tf-label" for="taskPriority" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Priorité</label>
+            <select id="taskPriority" class="tf-select">${priorityOptionsHtml(task?.priority || "medium")}</select>
           </div>
           <div class="tf-modal-field">
-            <label class="form-label" for="taskDueDate">Échéance</label>
-            <input id="taskDueDate" class="form-control" type="date" />
+            <label class="tf-label" for="taskDueDate" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Échéance</label>
+            <input id="taskDueDate" class="tf-input" type="date" />
           </div>
           <div class="tf-modal-actions">
-            ${isEdit && typeof onDelete === "function" ? '<button type="button" id="deleteTaskBtn" class="btn btn-outline-danger me-auto">Supprimer</button>' : ""}
-            <button type="button" id="closeTaskBtn" class="btn btn-outline-secondary">Annuler</button>
-            <button type="button" id="saveTaskBtn" class="btn btn-primary">${isEdit ? "Enregistrer" : "Créer"}</button>
+            ${isEdit && typeof onDelete === "function" ? '<button type="button" id="deleteTaskBtn" class="tf-btn tf-btn--danger tf-btn--sm">Supprimer</button>' : ""}
+            <button type="button" id="closeTaskBtn" class="tf-btn tf-btn--ghost">Annuler</button>
+            <button type="button" id="saveTaskBtn" class="tf-btn tf-btn--primary">${isEdit ? "Enregistrer" : "Créer"}</button>
           </div>
         </div>
       </div>

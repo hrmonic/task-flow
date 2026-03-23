@@ -8,9 +8,29 @@ import {
   getSessionUser,
   refreshProfileFromApi,
 } from "./auth.js";
-import { loadBoard } from "./kanban.js";
+import { popMoveSnapshot } from "./boardHistory.js";
+import { loadBoard, reloadActiveBoard } from "./kanban.js";
 
 const state = { boards: [], activeBoardId: null };
+
+/** @type {AbortController | null} */
+let paletteKeyAbort = null;
+
+const BOARD_DOT_PALETTE = [
+  "#6366f1",
+  "#8b5cf6",
+  "#06b6d4",
+  "#10b981",
+  "#f97316",
+];
+
+function boardAccent(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return BOARD_DOT_PALETTE[h % BOARD_DOT_PALETTE.length];
+}
 
 function setAuthenticatedShell(active) {
   document.body.classList.toggle("is-authenticated", active);
@@ -57,11 +77,34 @@ function scrollToSection(id) {
   }
 }
 
-function collapseBootstrapNav() {
-  const navEl = document.getElementById("navMain");
-  if (!navEl || !window.bootstrap?.Collapse) return;
-  const inst = window.bootstrap.Collapse.getInstance(navEl);
-  if (inst) inst.hide();
+function closeMobileNav() {
+  const panel = document.getElementById("navMain");
+  const btn = document.getElementById("navMenuToggle");
+  if (panel) panel.classList.remove("is-open");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+function wireMobileNav() {
+  const btn = document.getElementById("navMenuToggle");
+  const panel = document.getElementById("navMain");
+  if (!btn || !panel) return;
+  btn.addEventListener("click", () => {
+    const open = !panel.classList.contains("is-open");
+    panel.classList.toggle("is-open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  });
+}
+
+function showToast(message, isError = false) {
+  const host = document.getElementById("toastHost");
+  if (!host || !message) return;
+  const t = document.createElement("div");
+  t.className = `tf-toast${isError ? " tf-toast--error" : ""}`;
+  t.textContent = message;
+  host.appendChild(t);
+  setTimeout(() => {
+    t.remove();
+  }, 3200);
 }
 
 function refreshNavUser() {
@@ -105,7 +148,7 @@ function wireShellNavigation() {
       } else if (target === "about") {
         scrollToSection("aboutSection");
       }
-      collapseBootstrapNav();
+      closeMobileNav();
     });
   });
 }
@@ -114,7 +157,7 @@ function wireAccountModal() {
   const open = async () => {
     await openAccountModal();
     refreshNavUser();
-    collapseBootstrapNav();
+    closeMobileNav();
   };
   document.getElementById("openAccountBtn")?.addEventListener("click", open);
   document.getElementById("openAccountFromDashboard")?.addEventListener("click", open);
@@ -147,6 +190,46 @@ function fillBoardSelect(selectEl, boards) {
     opt.value = b.id;
     opt.textContent = b.name;
     selectEl.appendChild(opt);
+  });
+}
+
+function renderBoardSidebar(boards, activeId) {
+  const aside = document.getElementById("boardSidebar");
+  const ul = document.getElementById("boardSidebarList");
+  if (!aside || !ul) return;
+  aside.hidden = boards.length === 0;
+  ul.replaceChildren();
+  boards.forEach((b) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className =
+      "tf-board-item" + (b.id === activeId ? " is-active" : "");
+    btn.dataset.boardId = b.id;
+    const dot = document.createElement("span");
+    dot.className = "tf-board-dot";
+    dot.style.background = boardAccent(b.id);
+    dot.setAttribute("aria-hidden", "true");
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(b.name || "Sans nom"));
+    btn.addEventListener("click", async () => {
+      const sel = document.getElementById("boardSelect");
+      if (sel) sel.value = b.id;
+      state.activeBoardId = b.id;
+      syncBoardEditorFromState();
+      renderBoardSidebar(state.boards, state.activeBoardId);
+      try {
+        await loadBoard(b.id);
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Chargement impossible.",
+          true,
+        );
+      }
+      closeMobileNav();
+    });
+    li.appendChild(btn);
+    ul.appendChild(li);
   });
 }
 
@@ -214,75 +297,71 @@ function renderAuth() {
   if (!authSection) return;
   authSection.innerHTML = `
     <div class="auth-wrap">
-      <section class="mx-auto" style="max-width:28rem" aria-labelledby="authTitle">
+      <section class="auth-section-inner" aria-labelledby="authTitle">
         <div class="auth-head">
           <p class="auth-kicker">Votre espace Kanban</p>
-          <h1 id="authTitle" class="h2 fw-bold">Bienvenue</h1>
+          <h1 id="authTitle" class="tf-h1" style="font-size:1.5rem">Bienvenue</h1>
           <p class="auth-subtitle">Connectez-vous pour reprendre vos tableaux, ou créez un compte en moins d'une minute.</p>
         </div>
 
-        <div class="card auth-card bg-body-tertiary border-secondary shadow">
-          <div class="card-body p-3 p-md-4">
-            <ul class="nav nav-pills nav-fill gap-2 mb-4" role="tablist" aria-label="Connexion ou inscription">
-              <li class="nav-item" role="presentation">
-                <button id="tabLogin" type="button" class="nav-link active" role="tab" aria-selected="true" aria-controls="loginForm" tabindex="0">Connexion</button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button id="tabRegister" type="button" class="nav-link" role="tab" aria-selected="false" aria-controls="registerForm" tabindex="-1">Inscription</button>
-              </li>
-            </ul>
+        <div class="tf-card auth-card">
+          <div class="tf-card-body p-auth">
+            <div class="tf-auth-tabs" role="tablist" aria-label="Connexion ou inscription">
+              <button id="tabLogin" type="button" class="tf-auth-tab" role="tab" aria-selected="true" aria-controls="loginForm" tabindex="0">Connexion</button>
+              <button id="tabRegister" type="button" class="tf-auth-tab" role="tab" aria-selected="false" aria-controls="registerForm" tabindex="-1">Inscription</button>
+            </div>
 
             <form id="loginForm" role="tabpanel" aria-labelledby="tabLogin" novalidate>
-              <h3 class="h5 fw-semibold mb-3" id="loginFormHeading">Connexion</h3>
-              <div id="loginError" class="alert alert-danger py-2 small" hidden role="alert" aria-live="assertive"></div>
-              <fieldset class="border-0 p-0 m-0">
-                <legend class="visually-hidden">Identifiants</legend>
-                <div class="mb-3">
-                  <label class="form-label" for="loginEmail">Adresse e-mail</label>
-                  <input id="loginEmail" name="email" class="form-control" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+              <h3 class="tf-h3 mb-3" style="font-size:1.05rem" id="loginFormHeading">Connexion</h3>
+              <div id="loginError" class="tf-alert tf-alert--danger mb-3" hidden role="alert" aria-live="assertive"></div>
+              <fieldset class="tf-fieldset">
+                <legend class="tf-sr-only">Identifiants</legend>
+                <div class="tf-field">
+                  <label class="tf-label" for="loginEmail">Adresse e-mail</label>
+                  <input id="loginEmail" name="email" class="tf-input" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
                 </div>
-                <div class="mb-4">
-                  <label class="form-label" for="loginPassword">Mot de passe</label>
-                  <div class="input-group">
-                    <input id="loginPassword" name="password" class="form-control" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
-                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="loginPassword" aria-controls="loginPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                <div class="tf-field">
+                  <label class="tf-label" for="loginPassword">Mot de passe</label>
+                  <div class="tf-input-row">
+                    <input id="loginPassword" name="password" class="tf-input" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
+                    <button type="button" class="tf-btn tf-btn--ghost tf-btn--sm auth-reveal-btn" data-reveal-target="loginPassword" aria-controls="loginPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
                   </div>
                 </div>
               </fieldset>
-              <button id="loginBtn" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Se connecter</button>
-              <p class="text-center text-secondary small mt-3 mb-0">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="btn btn-link btn-sm p-0 align-baseline">Créer un compte</button></p>
+              <button id="loginBtn" type="submit" class="tf-btn tf-btn--primary tf-btn--block" style="margin-top:0.5rem">Se connecter</button>
+              <p class="tf-muted text-center mt-3 mb-0" style="font-size:0.8125rem">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="tf-btn tf-btn--link">Créer un compte</button></p>
             </form>
 
             <form id="registerForm" role="tabpanel" aria-labelledby="tabRegister" hidden novalidate aria-hidden="true">
-              <h3 class="h5 fw-semibold mb-3" id="registerFormHeading">Inscription</h3>
-              <div id="registerError" class="alert alert-danger py-2 small" hidden role="alert" aria-live="assertive"></div>
-              <fieldset class="border-0 p-0 m-0">
-                <legend class="visually-hidden">Nouveau compte</legend>
-                <div class="mb-3">
-                  <label class="form-label" for="registerName">Nom complet</label>
-                  <input id="registerName" name="name" class="form-control" type="text" placeholder="Jean Dupont" autocomplete="name" minlength="2" required>
+              <h3 class="tf-h3 mb-3" style="font-size:1.05rem" id="registerFormHeading">Inscription</h3>
+              <div id="registerError" class="tf-alert tf-alert--danger mb-3" hidden role="alert" aria-live="assertive"></div>
+              <fieldset class="tf-fieldset">
+                <legend class="tf-sr-only">Nouveau compte</legend>
+                <div class="tf-field">
+                  <label class="tf-label" for="registerName">Nom complet</label>
+                  <input id="registerName" name="name" class="tf-input" type="text" placeholder="Jean Dupont" autocomplete="name" minlength="2" required>
                 </div>
-                <div class="mb-3">
-                  <label class="form-label" for="registerEmail">Adresse e-mail</label>
-                  <input id="registerEmail" name="email" class="form-control" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+                <div class="tf-field">
+                  <label class="tf-label" for="registerEmail">Adresse e-mail</label>
+                  <input id="registerEmail" name="email" class="tf-input" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
                 </div>
-                <div class="mb-3">
-                  <label class="form-label" for="registerPassword">Mot de passe</label>
-                  <div class="input-group">
-                    <input id="registerPassword" name="password" class="form-control" type="password" placeholder="Au moins 8 caractères" autocomplete="new-password" minlength="8" required>
-                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="registerPassword" aria-controls="registerPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                <div class="tf-field">
+                  <label class="tf-label" for="registerPassword">Mot de passe</label>
+                  <div class="tf-input-row">
+                    <input id="registerPassword" name="password" class="tf-input" type="password" placeholder="Au moins 8 caractères" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="tf-btn tf-btn--ghost tf-btn--sm auth-reveal-btn" data-reveal-target="registerPassword" aria-controls="registerPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
                   </div>
                 </div>
-                <div class="mb-4">
-                  <label class="form-label" for="registerPasswordConfirm">Confirmer le mot de passe</label>
-                  <div class="input-group">
-                    <input id="registerPasswordConfirm" name="password_confirm" class="form-control" type="password" placeholder="Répétez le mot de passe" autocomplete="new-password" minlength="8" required>
-                    <button type="button" class="btn btn-outline-secondary auth-reveal-btn" data-reveal-target="registerPasswordConfirm" aria-controls="registerPasswordConfirm" aria-pressed="false" aria-label="Afficher la confirmation du mot de passe">Voir</button>
+                <div class="tf-field">
+                  <label class="tf-label" for="registerPasswordConfirm">Confirmer le mot de passe</label>
+                  <div class="tf-input-row">
+                    <input id="registerPasswordConfirm" name="password_confirm" class="tf-input" type="password" placeholder="Répétez le mot de passe" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="tf-btn tf-btn--ghost tf-btn--sm auth-reveal-btn" data-reveal-target="registerPasswordConfirm" aria-controls="registerPasswordConfirm" aria-pressed="false" aria-label="Afficher la confirmation du mot de passe">Voir</button>
                   </div>
                 </div>
               </fieldset>
-              <button id="registerBtn" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Créer mon compte</button>
-              <p class="text-center text-secondary small mt-3 mb-0">Déjà inscrit ? <button id="goToLoginBtn" type="button" class="btn btn-link btn-sm p-0 align-baseline">Se connecter</button></p>
+              <button id="registerBtn" type="submit" class="tf-btn tf-btn--primary tf-btn--block" style="margin-top:0.5rem">Créer mon compte</button>
+              <p class="tf-muted text-center mt-3 mb-0" style="font-size:0.8125rem">Déjà inscrit ? <button id="goToLoginBtn" type="button" class="tf-btn tf-btn--link">Se connecter</button></p>
             </form>
           </div>
         </div>
@@ -386,6 +465,273 @@ function renderAuth() {
   };
 }
 
+function isTypingTarget(el) {
+  if (!el || !(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT")
+    return true;
+  return el.isContentEditable;
+}
+
+function closeCommandPalette() {
+  paletteKeyAbort?.abort();
+  paletteKeyAbort = null;
+  const p = document.getElementById("commandPalette");
+  if (p) {
+    p.hidden = true;
+    p.replaceChildren();
+  }
+}
+
+function openCommandPalette() {
+  const host = document.getElementById("commandPalette");
+  if (!host || !getToken()) return;
+  closeCommandPalette();
+  host.hidden = false;
+  host.innerHTML = `
+    <div class="tf-palette-backdrop" aria-hidden="true"></div>
+    <div class="tf-palette" role="dialog" aria-modal="true" aria-label="Commandes">
+      <input type="search" class="tf-palette-input" id="paletteFilter" placeholder="Filtrer les commandes…" autocomplete="off" />
+      <p class="tf-palette-hint">Flèches et Entrée · <kbd>Échap</kbd> fermer</p>
+      <ul id="paletteList" class="tf-palette-list"></ul>
+    </div>`;
+
+  const cmds = [
+    {
+      id: "boards",
+      label: "Ouvrir les tableaux Kanban",
+      run: () => {
+        closeCommandPalette();
+        showAppView("boards");
+        scrollToSection("boardSection");
+        closeMobileNav();
+      },
+    },
+    {
+      id: "dash",
+      label: "Retour au tableau de bord",
+      run: () => {
+        closeCommandPalette();
+        showAppView("dashboard");
+        scrollToSection("main-content");
+      },
+    },
+    {
+      id: "account",
+      label: "Mon compte",
+      run: async () => {
+        closeCommandPalette();
+        await openAccountModal();
+        refreshNavUser();
+      },
+    },
+    {
+      id: "col",
+      label: "Nouvelle colonne",
+      run: () => {
+        closeCommandPalette();
+        document.querySelector(".add-column-btn")?.click();
+      },
+    },
+  ];
+
+  const listEl = document.getElementById("paletteList");
+  const filterEl = document.getElementById("paletteFilter");
+  let filtered = [...cmds];
+  let hi = 0;
+
+  function renderList() {
+    if (!listEl) return;
+    listEl.replaceChildren();
+    filtered.forEach((c, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "tf-palette-item" + (i === hi ? " is-active" : "");
+      b.textContent = c.label;
+      b.addEventListener("click", () => {
+        c.run();
+      });
+      li.appendChild(b);
+      listEl.appendChild(li);
+    });
+  }
+
+  function applyFilter() {
+    const q = (filterEl?.value || "").trim().toLowerCase();
+    filtered = cmds.filter(
+      (c) => !q || c.label.toLowerCase().includes(q) || c.id.includes(q),
+    );
+    hi = 0;
+    renderList();
+  }
+
+  applyFilter();
+  filterEl?.focus();
+  filterEl?.addEventListener("input", applyFilter);
+
+  paletteKeyAbort = new AbortController();
+  const onKey = (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeCommandPalette();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      hi = Math.min(filtered.length - 1, hi + 1);
+      renderList();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      hi = Math.max(0, hi - 1);
+      renderList();
+    } else if (e.key === "Enter" && filtered[hi]) {
+      e.preventDefault();
+      filtered[hi].run();
+    }
+  };
+  document.addEventListener("keydown", onKey, {
+    signal: paletteKeyAbort.signal,
+  });
+  host.querySelector(".tf-palette-backdrop")?.addEventListener(
+    "click",
+    () => {
+      closeCommandPalette();
+    },
+    { once: true },
+  );
+}
+
+function closeShortcutHelp() {
+  const h = document.getElementById("shortcutHelp");
+  if (h) {
+    h.hidden = true;
+    h.replaceChildren();
+  }
+}
+
+function openShortcutHelp() {
+  const h = document.getElementById("shortcutHelp");
+  if (!h) return;
+  h.hidden = false;
+  h.innerHTML = `
+    <div class="tf-modal-backdrop" aria-hidden="true"></div>
+    <div class="tf-modal-panel tf-modal-panel--wide">
+      <div class="tf-modal-content" role="dialog" aria-modal="true" aria-labelledby="shortcutHelpTitle">
+        <div class="tf-modal-header">
+          <h3 id="shortcutHelpTitle">Raccourcis clavier</h3>
+          <button type="button" class="tf-modal-close" id="shortcutHelpClose" aria-label="Fermer">×</button>
+        </div>
+        <div class="tf-modal-body tf-shortcut-list">
+          <p><kbd>Ctrl</kbd> + <kbd>K</kbd> — Palette de commandes</p>
+          <p><kbd>N</kbd> — Nouvelle tâche (première colonne)</p>
+          <p><kbd>C</kbd> — Nouvelle colonne</p>
+          <p><kbd>Ctrl</kbd> + <kbd>Z</kbd> — Annuler le dernier déplacement de tâche</p>
+          <p><kbd>?</kbd> — Cette aide</p>
+          <p><kbd>Échap</kbd> — Fermer palette / aide</p>
+        </div>
+      </div>
+    </div>`;
+  const close = () => {
+    document.removeEventListener("keydown", onDoc);
+    closeShortcutHelp();
+  };
+  const onDoc = (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      close();
+    }
+  };
+  document.addEventListener("keydown", onDoc);
+  h.querySelector("#shortcutHelpClose")?.addEventListener("click", close);
+  h.querySelector(".tf-modal-backdrop")?.addEventListener("click", close);
+}
+
+async function undoLastTaskMove() {
+  const snap = popMoveSnapshot();
+  if (!snap) {
+    showToast("Rien à annuler pour le moment.");
+    return;
+  }
+  try {
+    await apiFetch(`/api/tasks/${snap.taskId}/move`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        column_id: snap.columnId,
+        position: snap.position,
+      }),
+    });
+    await reloadActiveBoard();
+    showToast("Déplacement annulé.");
+  } catch {
+    showToast("Impossible d'annuler ce déplacement.", true);
+    await reloadActiveBoard();
+  }
+}
+
+function wireGlobalShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    const paletteOpen =
+      document.getElementById("commandPalette") &&
+      !document.getElementById("commandPalette").hidden;
+    const helpOpen =
+      document.getElementById("shortcutHelp") &&
+      !document.getElementById("shortcutHelp").hidden;
+
+    if (e.key === "Escape") {
+      if (paletteOpen) {
+        e.preventDefault();
+        closeCommandPalette();
+        return;
+      }
+      if (helpOpen) {
+        e.preventDefault();
+        closeShortcutHelp();
+        return;
+      }
+    }
+
+    const metaOrCtrl = e.ctrlKey || e.metaKey;
+    if (metaOrCtrl && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (getToken()) openCommandPalette();
+      return;
+    }
+    if (metaOrCtrl && e.key.toLowerCase() === "z" && !e.shiftKey) {
+      if (!getToken()) return;
+      const boardVis = getBoardSectionEl() && !getBoardSectionEl().hidden;
+      if (!boardVis) return;
+      e.preventDefault();
+      undoLastTaskMove();
+      return;
+    }
+
+    if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+      if (isTypingTarget(e.target)) return;
+      e.preventDefault();
+      openShortcutHelp();
+      return;
+    }
+
+    if (!getToken()) return;
+    const boardSection = getBoardSectionEl();
+    const boardVis = boardSection && !boardSection.hidden;
+    if (!boardVis) return;
+    if (isTypingTarget(e.target)) return;
+
+    if (e.key.toLowerCase() === "n") {
+      e.preventDefault();
+      const first = document.querySelector(
+        ".kanban-column:not(.kanban-column--add) .add-task",
+      );
+      first?.click();
+    } else if (e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      document.querySelector(".add-column-btn")?.click();
+    }
+  });
+}
+
 async function bootstrapBoard() {
   if (!getToken()) return;
   const logoutBtn = document.getElementById("logoutBtn");
@@ -415,6 +761,7 @@ async function bootstrapBoard() {
     fillBoardSelect(select, state.boards);
     state.activeBoardId = select.value || state.boards[0].id;
     syncBoardEditorFromState();
+    renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(state.activeBoardId);
   } catch (err) {
     kanban.replaceChildren();
@@ -432,7 +779,15 @@ async function bootstrapBoard() {
   select.onchange = async () => {
     state.activeBoardId = select.value;
     syncBoardEditorFromState();
-    await loadBoard(state.activeBoardId);
+    renderBoardSidebar(state.boards, state.activeBoardId);
+    try {
+      await loadBoard(state.activeBoardId);
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Chargement du tableau impossible.",
+        true,
+      );
+    }
   };
 
   document.getElementById("saveBoardBtn").onclick = async () => {
@@ -461,6 +816,7 @@ async function bootstrapBoard() {
       fillBoardSelect(select, state.boards);
       select.value = id;
       syncBoardEditorFromState();
+      renderBoardSidebar(state.boards, state.activeBoardId);
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Enregistrement impossible.",
@@ -492,6 +848,7 @@ async function bootstrapBoard() {
       fillBoardSelect(select, state.boards);
       state.activeBoardId = select.value;
       syncBoardEditorFromState();
+      renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(state.activeBoardId);
     } catch (err) {
       setBoardToolbarError(
@@ -518,6 +875,8 @@ async function bootstrapBoard() {
       select.value = board.id;
       document.getElementById("newBoardName").value = "";
       syncBoardEditorFromState();
+      state.activeBoardId = board.id;
+      renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(board.id);
     } catch (err) {
       const message =
@@ -533,8 +892,10 @@ document.getElementById("logoutBtn").onclick = () => {
   location.reload();
 };
 
+wireMobileNav();
 wireShellNavigation();
 wireAccountModal();
+wireGlobalShortcuts();
 
 if (getToken()) {
   document.getElementById("logoutBtn").hidden = false;

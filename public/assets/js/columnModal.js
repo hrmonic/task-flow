@@ -59,16 +59,16 @@ export function openColumnModal({ column = null, onSave }) {
         </div>
         <div class="tf-modal-body">
           <div class="tf-modal-field">
-            <label class="form-label" for="columnName">Nom</label>
-            <input id="columnName" class="form-control" type="text" maxlength="120" autocomplete="off" />
+            <label class="tf-label" for="columnName" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Nom</label>
+            <input id="columnName" class="tf-input" type="text" maxlength="120" autocomplete="off" />
           </div>
           <div class="tf-modal-field">
-            <label class="form-label" for="columnColor">Couleur (barre du haut)</label>
-            <input id="columnColor" class="form-control form-control-color w-100" type="color" value="${escapeHtml(defaultColor)}" title="Couleur de la colonne" />
+            <label class="tf-label" for="columnColor" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Couleur (barre du haut)</label>
+            <input id="columnColor" class="tf-input tf-input--color" type="color" value="${escapeHtml(defaultColor)}" title="Couleur de la colonne" />
           </div>
           <div class="tf-modal-actions">
-            <button type="button" id="closeColumnBtn" class="btn btn-outline-secondary">Annuler</button>
-            <button type="button" id="saveColumnBtn" class="btn btn-primary">${isEdit ? "Enregistrer" : "Créer"}</button>
+            <button type="button" id="closeColumnBtn" class="tf-btn tf-btn--ghost">Annuler</button>
+            <button type="button" id="saveColumnBtn" class="tf-btn tf-btn--primary">${isEdit ? "Enregistrer" : "Créer"}</button>
           </div>
         </div>
       </div>

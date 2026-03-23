@@ -126,13 +126,18 @@ export function renderBoard(columns) {
       <section class="kanban-column" data-column-id="${colId}" aria-label="Colonne ${colName}" style="--column-accent:${colColor}">
         <header class="column-header">
           <div class="column-header-row">
-            <h3 class="column-drag-handle" draggable="true" title="Glisser pour déplacer la colonne">${colName}</h3>
-            <div class="column-header-actions">
-              <button type="button" class="icon-btn column-edit-btn" draggable="false" data-column-id="${colId}" aria-label="Modifier la colonne ${colName}">✎</button>
-              <button type="button" class="icon-btn icon-btn--danger column-delete-btn" draggable="false" data-column-id="${colId}" aria-label="Supprimer la colonne ${colName}">🗑</button>
+            <div class="column-header-left">
+              <span class="column-stripe" aria-hidden="true"></span>
+              <h3 class="column-drag-handle" draggable="true" title="Glisser pour déplacer la colonne">${colName}</h3>
+            </div>
+            <div class="column-header-right">
+              <span class="column-task-count" aria-label="${col.tasks.length} tâche${col.tasks.length === 1 ? "" : "s"}">${col.tasks.length}</span>
+              <div class="column-header-actions">
+                <button type="button" class="icon-btn column-edit-btn" draggable="false" data-column-id="${colId}" aria-label="Modifier la colonne ${colName}">✎</button>
+                <button type="button" class="icon-btn icon-btn--danger column-delete-btn" draggable="false" data-column-id="${colId}" aria-label="Supprimer la colonne ${colName}">🗑</button>
+              </div>
             </div>
           </div>
-          <span class="column-task-count" aria-label="${col.tasks.length} tâche${col.tasks.length === 1 ? "" : "s"}">${col.tasks.length}</span>
         </header>
         <div class="tasks" data-drop-column="${colId}" role="list">
           ${tasksHtml}

@@ -111,6 +111,7 @@ $router->post('/api/auth/refresh', fn(array $params) => $authController->refresh
 
 $router->get('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->index($userId, $params)));
 $router->post('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->create($userId, $params)));
+$router->patch('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->update($userId, $params)));
 $router->delete('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->delete($userId, $params)));
 
 $router->get('/api/boards/{id}/columns', fn(array $params) => $auth->run(fn(string $userId) => $columnController->index($userId, $params)));

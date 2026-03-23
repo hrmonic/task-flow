@@ -17,7 +17,12 @@ final class TaskRepository
     {
         $stmt = $this->pdo->prepare('SELECT id, column_id, title, description, priority, position, due_date, created_at, updated_at FROM tasks WHERE column_id = :column_id ORDER BY position ASC');
         $stmt->execute(['column_id' => $columnId]);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+
+        return array_map(
+            static fn (array $r): array => $r + ['assignees' => []],
+            $rows
+        );
     }
 
     public function create(string $columnId, array $payload): array
@@ -40,7 +45,7 @@ final class TaskRepository
             'position' => $position,
             'due_date' => $payload['due_date'] ?? null,
         ]);
-        return ['id' => $id] + $payload + ['column_id' => $columnId, 'position' => $position];
+        return ['id' => $id] + $payload + ['column_id' => $columnId, 'position' => $position, 'assignees' => []];
     }
 
     public function update(string $id, array $payload): void
@@ -60,10 +65,81 @@ final class TaskRepository
         $stmt->execute($params);
     }
 
-    public function move(string $id, string $columnId, int $position): void
+    /**
+     * Réordonne les positions (1-based) dans une transaction : même colonne ou changement de colonne.
+     * Utilise une position temporaire 0 (hors plage métier) pour éviter les collisions pendant les UPDATE.
+     */
+    public function move(string $id, string $targetColumnId, int $requestedPosition): void
     {
-        $stmt = $this->pdo->prepare('UPDATE tasks SET column_id = :column_id, position = :position, updated_at = NOW() WHERE id = :id');
-        $stmt->execute(['id' => $id, 'column_id' => $columnId, 'position' => $position]);
+        $this->pdo->beginTransaction();
+        try {
+            $lock = $this->pdo->prepare('SELECT column_id, position FROM tasks WHERE id = :id FOR UPDATE');
+            $lock->execute(['id' => $id]);
+            $row = $lock->fetch(PDO::FETCH_ASSOC);
+            if ($row === false) {
+                $this->pdo->rollBack();
+                throw new \RuntimeException('Task not found');
+            }
+
+            $sourceColumnId = (string) $row['column_id'];
+            $oldPos = (int) $row['position'];
+
+            $this->pdo->prepare('UPDATE tasks SET position = 0, updated_at = NOW() WHERE id = :id')->execute(['id' => $id]);
+
+            if ($sourceColumnId === $targetColumnId) {
+                $cntStmt = $this->pdo->prepare('SELECT COUNT(*) FROM tasks WHERE column_id = :c');
+                $cntStmt->execute(['c' => $sourceColumnId]);
+                $n = (int) $cntStmt->fetchColumn();
+                $newPos = max(1, min($requestedPosition, $n));
+
+                if ($newPos === $oldPos) {
+                    $this->pdo->prepare('UPDATE tasks SET position = :p, updated_at = NOW() WHERE id = :id')->execute(['p' => $oldPos, 'id' => $id]);
+                    $this->pdo->commit();
+
+                    return;
+                }
+
+                if ($oldPos < $newPos) {
+                    $s = $this->pdo->prepare(
+                        'UPDATE tasks SET position = position - 1, updated_at = NOW()
+                         WHERE column_id = :c AND id != :id AND position > :old AND position <= :new'
+                    );
+                    $s->execute(['c' => $sourceColumnId, 'id' => $id, 'old' => $oldPos, 'new' => $newPos]);
+                } else {
+                    $s = $this->pdo->prepare(
+                        'UPDATE tasks SET position = position + 1, updated_at = NOW()
+                         WHERE column_id = :c AND id != :id AND position >= :new AND position < :old'
+                    );
+                    $s->execute(['c' => $sourceColumnId, 'id' => $id, 'new' => $newPos, 'old' => $oldPos]);
+                }
+
+                $this->pdo->prepare('UPDATE tasks SET position = :p, updated_at = NOW() WHERE id = :id')->execute(['p' => $newPos, 'id' => $id]);
+            } else {
+                $this->pdo->prepare(
+                    'UPDATE tasks SET position = position - 1, updated_at = NOW()
+                     WHERE column_id = :c AND position > :old'
+                )->execute(['c' => $sourceColumnId, 'old' => $oldPos]);
+
+                $mStmt = $this->pdo->prepare('SELECT COUNT(*) FROM tasks WHERE column_id = :c');
+                $mStmt->execute(['c' => $targetColumnId]);
+                $m = (int) $mStmt->fetchColumn();
+                $newPos = max(1, min($requestedPosition, $m + 1));
+
+                $this->pdo->prepare(
+                    'UPDATE tasks SET position = position + 1, updated_at = NOW()
+                     WHERE column_id = :c AND position >= :new'
+                )->execute(['c' => $targetColumnId, 'new' => $newPos]);
+
+                $this->pdo->prepare(
+                    'UPDATE tasks SET column_id = :col, position = :p, updated_at = NOW() WHERE id = :id'
+                )->execute(['col' => $targetColumnId, 'p' => $newPos, 'id' => $id]);
+            }
+
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function delete(string $id): void

@@ -1,0 +1,14 @@
+---
+description: TaskFlow — PHP 8.2 backend architecture (MVC, PSR-4, repositories, strict types)
+globs: task-flow/**/*.php
+alwaysApply: false
+---
+
+# TaskFlow — PHP architect
+
+- `declare(strict_types=1);` in every PHP file.
+- Explicit return types on all methods.
+- Repository pattern: no SQL in controllers; models are not DB layers.
+- PSR-4 autoload via Composer (`App\` → `src/`).
+- Prefer typed custom exceptions (`NotFoundException`, `ValidationException`, etc.) at domain boundaries.
+- Keep `public/index.php` as the single front controller for dynamic routes.

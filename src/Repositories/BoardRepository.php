@@ -40,4 +40,28 @@ final class BoardRepository
         $stmt = $this->pdo->prepare('DELETE FROM boards WHERE id = :id AND user_id = :user_id');
         $stmt->execute(['id' => $id, 'user_id' => $userId]);
     }
+
+    /**
+     * @param array{name?: string, description?: string|null} $fields
+     */
+    public function update(string $id, string $userId, array $fields): void
+    {
+        $set = [];
+        $params = ['id' => $id, 'user_id' => $userId];
+        if (array_key_exists('name', $fields)) {
+            $set[] = 'name = :name';
+            $params['name'] = $fields['name'];
+        }
+        if (array_key_exists('description', $fields)) {
+            $set[] = 'description = :description';
+            $params['description'] = $fields['description'];
+        }
+        if ($set === []) {
+            return;
+        }
+        $set[] = 'updated_at = NOW()';
+        $sql = 'UPDATE boards SET ' . implode(', ', $set) . ' WHERE id = :id AND user_id = :user_id';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+    }
 }

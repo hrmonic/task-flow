@@ -1,0 +1,14 @@
+---
+description: TaskFlow — MySQL schema, migrations, PDO, indexes
+globs: task-flow/database/**/*.sql,task-flow/src/Repositories/**/*.php
+alwaysApply: false
+---
+
+# TaskFlow — Database
+
+- Foreign keys with explicit `ON DELETE CASCADE` where children must disappear with parent.
+- Index FK columns and frequent sort columns (`position`, `due_date`, etc.).
+- Versioned SQL migrations under `database/migrations/`.
+- PDO with prepared statements only; no string-interpolated SQL.
+- Task `priority`: MySQL `ENUM('low','medium','high','urgent')` (or equivalent documented convention).
+- UUIDs: `ramsey/uuid` or `bin2hex(random_bytes(16))` — stay consistent with existing migrations.

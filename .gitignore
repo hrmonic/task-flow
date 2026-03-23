@@ -5,4 +5,6 @@
 /var
 .DS_Store
 .phpunit.result.cache
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/*.mdc

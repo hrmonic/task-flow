@@ -8,6 +8,7 @@ use App\Repositories\BoardRepository;
 use App\Repositories\ColumnRepository;
 use App\Services\ResponseService;
 use App\Services\ValidationService;
+use Throwable;
 
 final class ColumnController
 {
@@ -45,7 +46,16 @@ final class ColumnController
             ResponseService::json(false, null, 'Column not found', [], 404);
             return;
         }
-        $this->columns->update($columnId, $payload);
+        try {
+            if (array_key_exists('name', $payload)) {
+                $payload['name'] = ValidationService::requiredString($payload, 'name', 2, 120);
+            }
+            $this->columns->update($columnId, $payload);
+        } catch (Throwable $e) {
+            ResponseService::json(false, null, $e->getMessage(), [], 422);
+
+            return;
+        }
         ResponseService::json(true, ['updated' => true], null);
     }
 

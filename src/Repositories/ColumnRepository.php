@@ -36,11 +36,25 @@ final class ColumnRepository
     {
         $fields = [];
         $params = ['id' => $id];
-        foreach (['name', 'position'] as $field) {
-            if (array_key_exists($field, $payload)) {
-                $fields[] = $field . ' = :' . $field;
-                $params[$field] = $payload[$field];
+        foreach (['name', 'position', 'color'] as $field) {
+            if (!array_key_exists($field, $payload)) {
+                continue;
             }
+            if ($field === 'color') {
+                $c = trim((string) $payload['color']);
+                if ($c === '') {
+                    continue;
+                }
+                if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $c)) {
+                    throw new \InvalidArgumentException('Invalid column color (use #RRGGBB)');
+                }
+                $fields[] = 'color = :color';
+                $params['color'] = $c;
+
+                continue;
+            }
+            $fields[] = $field . ' = :' . $field;
+            $params[$field] = $payload[$field];
         }
         if ($fields === []) { return; }
         $stmt = $this->pdo->prepare('UPDATE columns SET ' . implode(', ', $fields) . ' WHERE id = :id');

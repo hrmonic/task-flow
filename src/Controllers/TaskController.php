@@ -56,7 +56,12 @@ final class TaskController
     {
         $taskId = (string) ($payload['id'] ?? '');
         $targetColumnId = (string) ($payload['column_id'] ?? '');
-        $position = max(1, (int) ($payload['position'] ?? 1));
+        $position = (int) ($payload['position'] ?? 1);
+        if ($position < 1) {
+            ResponseService::json(false, null, 'Invalid position', [], 422);
+
+            return;
+        }
         $boardId = $this->tasks->boardIdByTaskId($taskId);
         $targetBoardId = $this->columns->boardIdByColumnId($targetColumnId);
         if (!$boardId || !$targetBoardId || $boardId !== $targetBoardId || !$this->boards->belongsToUser($boardId, $userId)) {

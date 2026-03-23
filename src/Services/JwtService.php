@@ -48,7 +48,16 @@ final class JwtService
 
     private function secret(): string
     {
-        return (string) ($_ENV['JWT_SECRET'] ?? 'change-me');
+        $raw = (string) ($_ENV['JWT_SECRET'] ?? 'change-me');
+        $trimmed = trim($raw);
+        $env = (string) ($_ENV['APP_ENV'] ?? 'dev');
+        if ($env === 'prod' && ($trimmed === '' || $trimmed === 'change-me')) {
+            throw new RuntimeException(
+                'JWT_SECRET must be set to a strong non-default value when APP_ENV=prod'
+            );
+        }
+
+        return $raw;
     }
 
     private function encode(array $payload): string

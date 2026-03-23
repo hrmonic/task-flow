@@ -1,0 +1,14 @@
+---
+description: TaskFlow — REST API, JWT, validation, CORS, rate limiting, JSON responses
+globs: task-flow/src/Controllers/**/*.php,task-flow/src/Middleware/**/*.php,task-flow/src/Services/JwtService.php,task-flow/src/Services/ResponseService.php,task-flow/src/Services/ValidationService.php
+alwaysApply: false
+---
+
+# TaskFlow — API and security
+
+- JWT secret from `.env` only (`JWT_SECRET`); never hardcode; reject default `change-me` when `APP_ENV=prod`.
+- Validate every input (length, format, type) before use; use `ValidationService` patterns.
+- JSON shape: `{ success, data, error, meta }` via `ResponseService`.
+- CORS: explicit origin (`CORS_ALLOW_ORIGIN`); no `*` in production with credentials.
+- Rate limit: ~60 req/min per IP (file bucket or Redis); see `RateLimitMiddleware`.
+- HTML output from PHP: escape with `htmlspecialchars` / context-appropriate escaping.

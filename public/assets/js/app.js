@@ -1,8 +1,88 @@
 import { apiFetch } from "./api.js";
-import { login, register, logout, getToken } from "./auth.js";
+import {
+  login,
+  register,
+  logout,
+  getToken,
+  getSessionUser,
+} from "./auth.js";
 import { loadBoard } from "./kanban.js";
 
 const state = { boards: [], activeBoardId: null };
+
+function setAuthenticatedShell(active) {
+  document.body.classList.toggle("is-authenticated", active);
+}
+
+function refreshNavUser() {
+  const el = document.getElementById("navUserLabel");
+  if (!el) return;
+  if (!getToken()) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  const u = getSessionUser();
+  el.textContent = u?.name ? u.name : "Connecté";
+  el.hidden = false;
+}
+
+function wireShellNavigation() {
+  const nav = document.getElementById("navMain");
+  const toggle = document.getElementById("navToggle");
+
+  const scrollToTarget = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.hidden = false;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (id === "main-content") el.focus({ preventScroll: true });
+    }
+  };
+
+  document.querySelectorAll("[data-nav-target]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const target = link.getAttribute("data-nav-target");
+      if (!target) return;
+      e.preventDefault();
+      if (target === "main") scrollToTarget("main-content");
+      else if (target === "auth") scrollToTarget("authSection");
+      else if (target === "boards") scrollToTarget("boardSection");
+      else if (target === "footer") scrollToTarget("page-footer");
+      if (nav && toggle) {
+        nav.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
+
+  if (toggle && nav) {
+    toggle.addEventListener("click", () => {
+      const open = !nav.classList.contains("is-open");
+      nav.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+    });
+  }
+}
+
+function syncBoardEditorFromState() {
+  const select = document.getElementById("boardSelect");
+  const titleIn = document.getElementById("boardTitleInput");
+  const descIn = document.getElementById("boardDescInput");
+  if (!select || !titleIn || !descIn) return;
+  const id = select.value;
+  const b = state.boards.find((x) => x.id === id);
+  if (!b) return;
+  titleIn.value = b.name || "";
+  descIn.value = b.description ? String(b.description) : "";
+}
+
+function setBoardToolbarError(message = "") {
+  const el = document.getElementById("boardToolbarError");
+  if (!el) return;
+  el.textContent = message;
+  el.hidden = !message;
+}
 
 function fillBoardSelect(selectEl, boards) {
   if (!selectEl) return;
@@ -22,11 +102,30 @@ function setAuthError(targetId, message = "") {
   node.hidden = !message;
 }
 
+function wirePasswordRevealButtons(root) {
+  root.querySelectorAll("[data-reveal-target]").forEach((btn) => {
+    const id = btn.getAttribute("data-reveal-target");
+    const input = id ? document.getElementById(id) : null;
+    if (!input) return;
+    btn.addEventListener("click", () => {
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      btn.setAttribute("aria-pressed", String(!showing));
+      btn.setAttribute(
+        "aria-label",
+        showing ? "Afficher le mot de passe" : "Masquer le mot de passe",
+      );
+      btn.textContent = showing ? "Voir" : "Masquer";
+    });
+  });
+}
+
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function showAuthMode(mode) {
+function showAuthMode(mode, options = {}) {
+  const { initial = false } = options;
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const tabLogin = document.getElementById("tabLogin");
@@ -34,6 +133,11 @@ function showAuthMode(mode) {
   if (!loginForm || !registerForm || !tabLogin || !tabRegister) return;
 
   const isLogin = mode === "login";
+  const wasLogin = tabLogin.getAttribute("aria-selected") === "true";
+  if (!initial && wasLogin === isLogin) {
+    return;
+  }
+
   loginForm.hidden = !isLogin;
   registerForm.hidden = isLogin;
   loginForm.setAttribute("aria-hidden", String(!isLogin));
@@ -42,7 +146,12 @@ function showAuthMode(mode) {
   tabRegister.classList.toggle("is-active", !isLogin);
   tabLogin.setAttribute("aria-selected", String(isLogin));
   tabRegister.setAttribute("aria-selected", String(!isLogin));
-  (isLogin ? document.getElementById("loginEmail") : document.getElementById("registerName"))?.focus();
+  tabLogin.tabIndex = isLogin ? 0 : -1;
+  tabRegister.tabIndex = isLogin ? -1 : 0;
+  (isLogin
+    ? document.getElementById("loginEmail")
+    : document.getElementById("registerName")
+  )?.focus();
 }
 
 function renderAuth() {
@@ -52,70 +161,112 @@ function renderAuth() {
     <div class="auth-wrap">
       <section class="auth-shell" aria-labelledby="authTitle">
         <div class="auth-head">
-          <p class="auth-kicker">TaskFlow</p>
-          <h2 id="authTitle">Bienvenue</h2>
-          <p class="auth-subtitle">Connectez-vous pour reprendre vos boards, ou creez un compte en moins d'une minute.</p>
+          <p class="auth-kicker">Votre espace Kanban</p>
+          <h1 id="authTitle">Bienvenue</h1>
+          <p class="auth-subtitle">Connectez-vous pour reprendre vos tableaux, ou créez un compte en moins d'une minute.</p>
         </div>
 
-        <div class="auth-switch" role="tablist" aria-label="Mode d'authentification">
-          <button id="tabLogin" type="button" class="auth-switch-btn is-active" role="tab" aria-selected="true" aria-controls="loginForm">
+        <div class="auth-switch" role="tablist" aria-label="Connexion ou inscription">
+          <button id="tabLogin" type="button" class="auth-switch-btn is-active" role="tab" aria-selected="true" aria-controls="loginForm" tabindex="0">
             Connexion
           </button>
-          <button id="tabRegister" type="button" class="auth-switch-btn" role="tab" aria-selected="false" aria-controls="registerForm">
+          <button id="tabRegister" type="button" class="auth-switch-btn" role="tab" aria-selected="false" aria-controls="registerForm" tabindex="-1">
             Inscription
           </button>
         </div>
 
-        <form id="loginForm" class="auth-card" novalidate aria-labelledby="authTitle">
-          <div id="loginError" class="auth-error" hidden role="alert" aria-live="polite"></div>
+        <form id="loginForm" class="auth-card" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+          <div class="auth-card-surface">
+            <h3 class="auth-form-title" id="loginFormHeading">Connexion</h3>
+            <div id="loginError" class="auth-error" hidden role="alert" aria-live="assertive"></div>
 
-          <div class="field">
-            <label for="loginEmail">Email professionnel</label>
-            <input id="loginEmail" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+            <div class="auth-fields-frame">
+              <fieldset class="auth-fields-group">
+                <legend>Identifiants</legend>
+                <div class="auth-field">
+                  <label for="loginEmail">Adresse e-mail</label>
+                  <input id="loginEmail" name="email" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+                </div>
+
+                <div class="auth-field">
+                  <label for="loginPassword">Mot de passe</label>
+                  <div class="auth-input-row">
+                    <input id="loginPassword" name="password" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
+                    <button type="button" class="auth-reveal-btn" data-reveal-target="loginPassword" aria-controls="loginPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            <button id="loginBtn" type="submit" class="btn auth-primary auth-card-submit">Se connecter</button>
+            <p class="auth-footnote">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="auth-inline-link">Créer un compte</button></p>
           </div>
-
-          <div class="field">
-            <label for="loginPassword">Mot de passe</label>
-            <input id="loginPassword" type="password" placeholder="Votre mot de passe" autocomplete="current-password" minlength="8" required>
-          </div>
-
-          <button id="loginBtn" type="submit" class="btn auth-primary">Se connecter</button>
-          <p class="auth-footnote">Pas encore de compte ? <button id="goToRegisterBtn" type="button" class="auth-inline-link">Creer un compte</button></p>
         </form>
 
-        <form id="registerForm" class="auth-card" hidden novalidate aria-labelledby="authTitle" aria-hidden="true">
-          <div id="registerError" class="auth-error" hidden role="alert" aria-live="polite"></div>
+        <form id="registerForm" class="auth-card" role="tabpanel" aria-labelledby="tabRegister" hidden novalidate aria-hidden="true">
+          <div class="auth-card-surface">
+            <h3 class="auth-form-title" id="registerFormHeading">Inscription</h3>
+            <div id="registerError" class="auth-error" hidden role="alert" aria-live="assertive"></div>
 
-          <div class="field">
-            <label for="registerName">Nom complet</label>
-            <input id="registerName" placeholder="John Doe" autocomplete="name" minlength="2" required>
+            <div class="auth-fields-frame">
+              <fieldset class="auth-fields-group">
+                <legend>Nouveau compte</legend>
+                <div class="auth-field">
+                  <label for="registerName">Nom complet</label>
+                  <input id="registerName" name="name" type="text" placeholder="Jean Dupont" autocomplete="name" minlength="2" required>
+                </div>
+
+                <div class="auth-field">
+                  <label for="registerEmail">Adresse e-mail</label>
+                  <input id="registerEmail" name="email" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
+                </div>
+
+                <div class="auth-field">
+                  <label for="registerPassword">Mot de passe</label>
+                  <div class="auth-input-row">
+                    <input id="registerPassword" name="password" type="password" placeholder="Au moins 8 caractères" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="auth-reveal-btn" data-reveal-target="registerPassword" aria-controls="registerPassword" aria-pressed="false" aria-label="Afficher le mot de passe">Voir</button>
+                  </div>
+                </div>
+
+                <div class="auth-field">
+                  <label for="registerPasswordConfirm">Confirmer le mot de passe</label>
+                  <div class="auth-input-row">
+                    <input id="registerPasswordConfirm" name="password_confirm" type="password" placeholder="Répétez le mot de passe" autocomplete="new-password" minlength="8" required>
+                    <button type="button" class="auth-reveal-btn" data-reveal-target="registerPasswordConfirm" aria-controls="registerPasswordConfirm" aria-pressed="false" aria-label="Afficher la confirmation du mot de passe">Voir</button>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+            <button id="registerBtn" type="submit" class="btn auth-primary auth-card-submit">Créer mon compte</button>
+            <p class="auth-footnote">Déjà inscrit ? <button id="goToLoginBtn" type="button" class="auth-inline-link">Se connecter</button></p>
           </div>
-
-          <div class="field">
-            <label for="registerEmail">Email professionnel</label>
-            <input id="registerEmail" type="email" placeholder="vous@entreprise.com" autocomplete="email" inputmode="email" required>
-          </div>
-
-          <div class="field">
-            <label for="registerPassword">Mot de passe</label>
-            <input id="registerPassword" type="password" placeholder="Au moins 8 caracteres" autocomplete="new-password" minlength="8" required>
-          </div>
-
-          <div class="field">
-            <label for="registerPasswordConfirm">Confirmer le mot de passe</label>
-            <input id="registerPasswordConfirm" type="password" placeholder="Repetez le mot de passe" autocomplete="new-password" minlength="8" required>
-          </div>
-
-          <button id="registerBtn" type="submit" class="btn auth-primary">Creer mon compte</button>
-          <p class="auth-footnote">Deja inscrit ? <button id="goToLoginBtn" type="button" class="auth-inline-link">Se connecter</button></p>
         </form>
       </section>
     </div>`;
 
-  showAuthMode("login");
+  authSection.setAttribute("aria-busy", "false");
+  wirePasswordRevealButtons(authSection);
+
+  const tablist = authSection.querySelector(".auth-switch");
+  if (tablist) {
+    tablist.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const tabLoginEl = document.getElementById("tabLogin");
+      const isLogin = tabLoginEl?.getAttribute("aria-selected") === "true";
+      if (e.key === "ArrowRight" && isLogin) showAuthMode("register");
+      else if (e.key === "ArrowLeft" && !isLogin) showAuthMode("login");
+    });
+  }
+
+  showAuthMode("login", { initial: true });
   document.getElementById("tabLogin").onclick = () => showAuthMode("login");
-  document.getElementById("tabRegister").onclick = () => showAuthMode("register");
-  document.getElementById("goToRegisterBtn").onclick = () => showAuthMode("register");
+  document.getElementById("tabRegister").onclick = () =>
+    showAuthMode("register");
+  document.getElementById("goToRegisterBtn").onclick = () =>
+    showAuthMode("register");
   document.getElementById("goToLoginBtn").onclick = () => showAuthMode("login");
 
   document.getElementById("loginForm").onsubmit = async (event) => {
@@ -125,11 +276,14 @@ function renderAuth() {
     setAuthError("loginError", "");
 
     if (!isValidEmail(email)) {
-      setAuthError("loginError", "Please enter a valid email address.");
+      setAuthError("loginError", "Indiquez une adresse e-mail valide.");
       return;
     }
     if (password.length < 8) {
-      setAuthError("loginError", "Password must contain at least 8 characters.");
+      setAuthError(
+        "loginError",
+        "Le mot de passe doit contenir au moins 8 caractères.",
+      );
       return;
     }
 
@@ -137,7 +291,10 @@ function renderAuth() {
       await login(email, password);
       await bootstrapBoard();
     } catch (error) {
-      setAuthError("loginError", error.message || "Login failed.");
+      setAuthError(
+        "loginError",
+        error.message || "Connexion impossible. Réessayez.",
+      );
     }
   };
 
@@ -146,23 +303,31 @@ function renderAuth() {
     const name = document.getElementById("registerName").value.trim();
     const email = document.getElementById("registerEmail").value.trim();
     const password = document.getElementById("registerPassword").value;
-    const passwordConfirm = document.getElementById("registerPasswordConfirm").value;
+    const passwordConfirm = document.getElementById(
+      "registerPasswordConfirm",
+    ).value;
     setAuthError("registerError", "");
 
     if (name.length < 2) {
-      setAuthError("registerError", "Name must contain at least 2 characters.");
+      setAuthError(
+        "registerError",
+        "Le nom doit contenir au moins 2 caractères.",
+      );
       return;
     }
     if (!isValidEmail(email)) {
-      setAuthError("registerError", "Please enter a valid email address.");
+      setAuthError("registerError", "Indiquez une adresse e-mail valide.");
       return;
     }
     if (password.length < 8) {
-      setAuthError("registerError", "Password must contain at least 8 characters.");
+      setAuthError(
+        "registerError",
+        "Le mot de passe doit contenir au moins 8 caractères.",
+      );
       return;
     }
     if (password !== passwordConfirm) {
-      setAuthError("registerError", "Passwords do not match.");
+      setAuthError("registerError", "Les mots de passe ne correspondent pas.");
       return;
     }
 
@@ -170,7 +335,10 @@ function renderAuth() {
       await register(name, email, password);
       await bootstrapBoard();
     } catch (error) {
-      setAuthError("registerError", error.message || "Registration failed.");
+      setAuthError(
+        "registerError",
+        error.message || "Inscription impossible. Réessayez.",
+      );
     }
   };
 }
@@ -184,6 +352,9 @@ async function bootstrapBoard() {
   const kanban = document.getElementById("kanbanBoard");
   if (!logoutBtn || !authSection || !boardSection || !select || !kanban) return;
 
+  setAuthenticatedShell(true);
+  refreshNavUser();
+
   logoutBtn.hidden = false;
   authSection.hidden = true;
   authSection.replaceChildren();
@@ -192,55 +363,146 @@ async function bootstrapBoard() {
   try {
     state.boards = await apiFetch("/api/boards");
     if (state.boards.length === 0) {
-      const b = await apiFetch("/api/boards", { method: "POST", body: JSON.stringify({ name: "My Board" }) });
+      const b = await apiFetch("/api/boards", {
+        method: "POST",
+        body: JSON.stringify({ name: "Mon tableau" }),
+      });
       state.boards = [b];
     }
     fillBoardSelect(select, state.boards);
     state.activeBoardId = select.value || state.boards[0].id;
+    syncBoardEditorFromState();
     await loadBoard(state.activeBoardId);
   } catch (err) {
     kanban.replaceChildren();
     const msg = document.createElement("p");
-    msg.className = "auth-error";
+    msg.className = "board-inline-error";
     msg.setAttribute("role", "alert");
-    msg.textContent = err instanceof Error ? err.message : "Unable to load boards.";
+    msg.textContent =
+      err instanceof Error
+        ? err.message
+        : "Impossible de charger les tableaux. Réessayez dans un instant.";
     kanban.appendChild(msg);
     return;
   }
 
   select.onchange = async () => {
     state.activeBoardId = select.value;
+    syncBoardEditorFromState();
     await loadBoard(state.activeBoardId);
+  };
+
+  document.getElementById("saveBoardBtn").onclick = async () => {
+    const id = select.value;
+    const titleIn = document.getElementById("boardTitleInput");
+    const descIn = document.getElementById("boardDescInput");
+    setBoardToolbarError("");
+    if (!id || !titleIn) return;
+    const name = titleIn.value.trim();
+    if (name.length < 2) {
+      setBoardToolbarError("Le nom du tableau doit contenir au moins 2 caractères.");
+      titleIn.focus();
+      return;
+    }
+    const description = descIn ? descIn.value.trim() : "";
+    try {
+      await apiFetch(`/api/boards/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name, description }),
+      });
+      const b = state.boards.find((x) => x.id === id);
+      if (b) {
+        b.name = name;
+        b.description = description === "" ? null : description;
+      }
+      fillBoardSelect(select, state.boards);
+      select.value = id;
+      syncBoardEditorFromState();
+    } catch (err) {
+      setBoardToolbarError(
+        err instanceof Error ? err.message : "Enregistrement impossible.",
+      );
+    }
+  };
+
+  document.getElementById("deleteBoardBtn").onclick = async () => {
+    const id = select.value;
+    if (!id) return;
+    if (
+      !window.confirm(
+        "Supprimer ce tableau et toutes ses colonnes et tâches ? Cette action est définitive.",
+      )
+    ) {
+      return;
+    }
+    setBoardToolbarError("");
+    try {
+      await apiFetch(`/api/boards/${id}`, { method: "DELETE" });
+      state.boards = state.boards.filter((b) => b.id !== id);
+      if (state.boards.length === 0) {
+        const b = await apiFetch("/api/boards", {
+          method: "POST",
+          body: JSON.stringify({ name: "Mon tableau" }),
+        });
+        state.boards = [b];
+      }
+      fillBoardSelect(select, state.boards);
+      state.activeBoardId = select.value;
+      syncBoardEditorFromState();
+      await loadBoard(state.activeBoardId);
+    } catch (err) {
+      setBoardToolbarError(
+        err instanceof Error ? err.message : "Suppression impossible.",
+      );
+    }
   };
 
   document.getElementById("createBoardBtn").onclick = async () => {
     const name = document.getElementById("newBoardName").value.trim();
-    if (!name) return;
+    setBoardToolbarError("");
+    if (!name) {
+      setBoardToolbarError("Indiquez un nom de tableau.");
+      document.getElementById("newBoardName")?.focus();
+      return;
+    }
     try {
-      const board = await apiFetch("/api/boards", { method: "POST", body: JSON.stringify({ name }) });
+      const board = await apiFetch("/api/boards", {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      });
       state.boards.push(board);
       fillBoardSelect(select, state.boards);
       select.value = board.id;
+      document.getElementById("newBoardName").value = "";
+      syncBoardEditorFromState();
       await loadBoard(board.id);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not create board.";
-      window.alert(message);
+      const message =
+        err instanceof Error ? err.message : "Création du tableau impossible.";
+      setBoardToolbarError(message);
     }
   };
 }
 
 document.getElementById("logoutBtn").onclick = () => {
   logout();
+  setAuthenticatedShell(false);
   location.reload();
 };
+
+wireShellNavigation();
 
 if (getToken()) {
   document.getElementById("logoutBtn").hidden = false;
   document.getElementById("boardSection").hidden = false;
   document.getElementById("authSection").hidden = true;
   document.getElementById("authSection").replaceChildren();
+  setAuthenticatedShell(true);
+  refreshNavUser();
   bootstrapBoard();
 } else {
+  setAuthenticatedShell(false);
+  refreshNavUser();
   document.getElementById("logoutBtn").hidden = true;
   document.getElementById("boardSection").hidden = true;
   document.getElementById("authSection").hidden = false;

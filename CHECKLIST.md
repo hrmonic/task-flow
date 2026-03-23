@@ -26,6 +26,8 @@
 
 ## Qualité
 - [x] Structure PSR-4
-- [x] Test PHPUnit minimal
+- [x] Tests PHPUnit (validation + JWT prod)
 - [x] Syntaxe PHP validée sur fichiers critiques
-- [ ] Démarrage Docker validé localement (bloqué ici: `docker-compose` indisponible dans cet environnement)
+- [x] Feuilles CSS Kanban / layout / tokens / components présentes sous `public/assets/css/`
+- [x] DnD : insertion à l’index + `PATCH .../move` avec réindexation SQL transactionnelle
+- [ ] Démarrage Docker : valider chez vous avec `docker compose up -d --build` puis migrations + seed (voir README)

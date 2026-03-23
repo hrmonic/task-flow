@@ -40,6 +40,7 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 ### Boards
 - `GET /api/boards`
 - `POST /api/boards`
+- `PATCH /api/boards/{id}` (champs partiels : `name`, `description`)
 - `DELETE /api/boards/{id}`
 
 ### Columns
@@ -58,12 +59,13 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 ## Sécurité intégrée
 
 - Password hashing: `PASSWORD_ARGON2ID`
-- JWT HS256 access + refresh
+- JWT HS256 access + refresh (`JWT_SECRET` obligatoire non trivial si `APP_ENV=prod`)
 - PDO prepared statements
 - Ownership checks sur board/column/task
 - CORS configuré
 - Rate limit simple par IP (60/min)
 - Security headers (nosniff, frame options, CSP)
+- CSRF : l’UI auth et le Kanban passent par l’API JSON + JWT ; pas de formulaires POST classiques vers PHP. Un service `CsrfService` est disponible si vous ajoutez des pages HTML avec soumission serveur.
 
 ## Vérification rapide
 

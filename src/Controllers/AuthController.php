@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Repositories\UserRepository;
+use App\Services\CsrfService;
 use App\Services\JwtService;
 use App\Services\ResponseService;
 use App\Services\ValidationService;
@@ -37,7 +38,13 @@ final class AuthController
             $access = $this->jwt->createAccessToken($user['id']);
             $refresh = $this->jwt->createRefreshToken($user['id']);
             setcookie('refresh_token', $refresh, ['expires' => time() + 604800, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
-            ResponseService::json(true, ['token' => $access, 'user' => $user], null, [], 201);
+            ResponseService::json(
+                true,
+                ['token' => $access, 'user' => $user, 'csrf_token' => CsrfService::token()],
+                null,
+                [],
+                201
+            );
         } catch (Throwable $e) {
             ResponseService::json(false, null, $e->getMessage(), [], 422);
         }
@@ -58,7 +65,12 @@ final class AuthController
             $access = $this->jwt->createAccessToken((string) $user['id']);
             $refresh = $this->jwt->createRefreshToken((string) $user['id']);
             setcookie('refresh_token', $refresh, ['expires' => time() + 604800, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
-            ResponseService::json(true, ['token' => $access, 'refresh_token' => $refresh, 'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email']]], null);
+            ResponseService::json(true, [
+                'token' => $access,
+                'refresh_token' => $refresh,
+                'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email']],
+                'csrf_token' => CsrfService::token(),
+            ], null);
         } catch (Throwable $e) {
             ResponseService::json(false, null, $e->getMessage(), [], 422);
         }
@@ -78,7 +90,7 @@ final class AuthController
                 return;
             }
             $access = $this->jwt->createAccessToken((string) $decoded['sub']);
-            ResponseService::json(true, ['token' => $access], null);
+            ResponseService::json(true, ['token' => $access, 'csrf_token' => CsrfService::token()], null);
         } catch (Throwable) {
             ResponseService::json(false, null, 'Invalid refresh token', [], 401);
         }

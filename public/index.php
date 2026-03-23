@@ -9,8 +9,10 @@ use App\Controllers\ColumnController;
 use App\Controllers\TaskController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CorsMiddleware;
+use App\Middleware\CsrfMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
+use App\Services\CsrfService;
 use App\Services\ResponseService;
 use Dotenv\Dotenv;
 
@@ -77,6 +79,11 @@ if (str_starts_with($path, '/assets/')) {
     exit;
 }
 
+if ($path === '/' || $path === '/index.html' || str_starts_with($path, '/api/')) {
+    CsrfService::startSessionIfNeeded();
+    CsrfService::token();
+}
+
 $cors = new CorsMiddleware();
 $cors->handle();
 (new SecurityHeadersMiddleware())->handle();
@@ -85,6 +92,14 @@ $rateLimit = new RateLimitMiddleware((int) ($_ENV['RATE_LIMIT_PER_MINUTE'] ?? 60
 if (!$rateLimit->handle()) {
     ResponseService::json(false, null, 'Too many requests', ['code' => 429], 429);
     exit;
+}
+
+if (str_starts_with($path, '/api/')) {
+    $csrf = new CsrfMiddleware();
+    if (!$csrf->handle($method, $path)) {
+        ResponseService::json(false, null, 'Jeton CSRF invalide ou absent', ['code' => 'csrf'], 403);
+        exit;
+    }
 }
 
 if ($path === '/' || $path === '/index.html') {

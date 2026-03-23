@@ -11,6 +11,21 @@ function getAppBasePath() {
   return "";
 }
 
+function readCsrfFromMeta() {
+  const m = document.querySelector('meta[name="csrf-token"]');
+  const v = m?.getAttribute("content");
+  return typeof v === "string" && v.length > 0 ? v : "";
+}
+
+function syncCsrfMetaFromData(data) {
+  if (data && typeof data.csrf_token === "string" && data.csrf_token.length > 0) {
+    const m = document.querySelector('meta[name="csrf-token"]');
+    if (m) {
+      m.setAttribute("content", data.csrf_token);
+    }
+  }
+}
+
 function resolveApiUrl(path) {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
@@ -32,9 +47,14 @@ function isAuthPathWithoutRefresh(path) {
 
 async function postRefreshAccessToken() {
   const url = resolveApiUrl("/api/auth/refresh");
+  const csrf = readCsrfFromMeta();
+  const headers = { "Content-Type": "application/json" };
+  if (csrf) {
+    headers["X-CSRF-Token"] = csrf;
+  }
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({}),
     credentials: "include",
   });
@@ -42,6 +62,7 @@ async function postRefreshAccessToken() {
   if (!res.ok || !json.success || !json.data?.token) {
     return false;
   }
+  syncCsrfMetaFromData(json.data);
   localStorage.setItem(TOKEN_STORAGE_KEY, json.data.token);
   return true;
 }
@@ -59,6 +80,10 @@ export async function apiFetch(path, options = {}) {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  const csrf = readCsrfFromMeta();
+  if (csrf) {
+    headers["X-CSRF-Token"] = csrf;
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
@@ -71,6 +96,10 @@ export async function apiFetch(path, options = {}) {
       credentials: "include",
     });
     const json = await res.json().catch(() => ({ success: false, error: "Invalid JSON" }));
+
+    if (json.success && json.data) {
+      syncCsrfMetaFromData(json.data);
+    }
 
     const canTryRefresh =
       res.status === 401 &&

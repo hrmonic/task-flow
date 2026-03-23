@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use App\Services\CsrfService;
+
 require_once dirname(__DIR__) . '/includes/base_path.php';
 $tfBase = taskflow_public_base_path();
 
@@ -13,6 +15,7 @@ function tf_url(string $path): string
 }
 
 $tfYear = (int) date('Y');
+$csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -23,6 +26,7 @@ $tfYear = (int) date('Y');
   <title>TaskFlow</title>
   <link rel="icon" type="image/png" href="<?= htmlspecialchars(tf_url('/assets/brand/taskflow-logo.png'), ENT_QUOTES, 'UTF-8') ?>">
   <meta name="taskflow-base" content="<?= htmlspecialchars($tfBase, ENT_QUOTES, 'UTF-8') ?>">
+  <meta name="csrf-token" content="<?= $csrfToken ?>">
   <style>
     html { background: #0c1222; color: #f1f5f9; }
     body, h1, h2, h3, h4, button, input, textarea, select {

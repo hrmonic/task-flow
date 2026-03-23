@@ -51,6 +51,7 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 - `GET /api/boards/{id}/columns`
 - `POST /api/boards/{id}/columns`
 - `PATCH /api/columns/{id}`
+- `PATCH /api/columns/{id}/move` — corps : `{ "position": n }` (ordre des colonnes)
 - `DELETE /api/columns/{id}`
 
 ### Tasks
@@ -69,10 +70,11 @@ Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS
 - CORS configuré
 - Rate limit simple par IP (60/min)
 - Security headers (nosniff, frame options, CSP)
-- CSRF : l’UI auth et le Kanban passent par l’API JSON + JWT ; pas de formulaires POST classiques vers PHP. Un service `CsrfService` est disponible si vous ajoutez des pages HTML avec soumission serveur.
+- CSRF : session PHP (`taskflow_sid`) + jeton dans `<meta name="csrf-token">` ; le client envoie `X-CSRF-Token` sur toutes les requêtes API qui modifient des données (`POST` / `PATCH` / `DELETE` / `PUT`), sauf `POST /api/auth/register` et `POST /api/auth/login`. Les réponses `register`, `login` et `refresh` incluent `csrf_token` pour mettre à jour la meta. Sans jeton valide → `403`.
 
 ## Vérification rapide
 
 - Sans token: `GET /api/boards` renvoie `401`
 - Avec token valide: CRUD board/column/task disponible
+- `PATCH` sans `X-CSRF-Token` (hors login/register) → `403`
 - Drag and drop déplace une tâche via `PATCH /api/tasks/{id}/move`

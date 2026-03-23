@@ -1,9 +1,7 @@
 /**
- * TaskFlow — couche unique au-dessus de Bootstrap (thème sombre).
- * Kanban, modales custom (.tf-modal-*), shell complémentaire.
+ * TaskFlow — thème Precision Dark, modales (.tf-modal-*), auth, footer.
  */
 
-/* ——— Shell ——— */
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -13,10 +11,137 @@
 .app-main {
   flex: 1 0 auto;
   outline: none;
+  padding-block: 0.75rem 1rem;
 }
 
-.app-main > .container-fluid {
-  max-width: 90rem;
+@media (min-width: 768px) {
+  .app-main {
+    padding-block: 1rem 1.25rem;
+  }
+}
+
+.tf-kbd {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  margin: 0 0.1rem;
+  border-radius: 4px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.7rem;
+  font-family: ui-monospace, monospace;
+}
+
+.col-about {
+  max-width: 42rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.py-4 {
+  padding-block: 1.5rem;
+}
+
+.py-3 {
+  padding-block: 0.75rem;
+}
+
+.py-md-5 {
+  padding-block: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .py-md-5 {
+    padding-block: 2.5rem;
+  }
+}
+
+.px-1 {
+  padding-inline: 0.25rem;
+}
+
+.d-block {
+  display: block;
+}
+
+.small {
+  font-size: 0.8125rem;
+}
+
+.board-head-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 767px) {
+  .board-head-hint {
+    display: none;
+  }
+}
+
+.tf-board-head {
+  margin-bottom: 1rem;
+}
+
+.board-toolbar-body {
+  padding: 1rem 1.15rem;
+}
+
+.toolbar-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .toolbar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .toolbar-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.toolbar-grid .danger-zone-card {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 900px) {
+  .toolbar-grid .danger-zone-card {
+    grid-column: auto;
+  }
 }
 
 .skip-link {
@@ -50,15 +175,6 @@ body:not(.is-authenticated) .app-only-footer {
   display: none !important;
 }
 
-.navbar-brand .brand-mark {
-  display: block;
-  height: 2.25rem;
-  width: auto;
-  max-width: 11rem;
-  object-fit: contain;
-  object-position: left center;
-}
-
 a.brand-plain,
 a.brand-plain:visited,
 a.brand-plain:hover {
@@ -76,13 +192,9 @@ main#main-content:focus-visible {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.5) 100%);
 }
 
-.dashboard-hero .display-6 {
-  font-size: clamp(1.35rem, 3vw, 1.85rem);
-}
-
 /* ——— Board toolbar ——— */
-.board-toolbar-card .card-body {
-  padding: 1rem 1.15rem;
+.board-toolbar-card {
+  margin-bottom: 1rem;
 }
 
 .board-inline-error {
@@ -100,201 +212,13 @@ main#main-content:focus-visible {
 }
 
 .danger-zone-card {
-  border-color: rgba(248, 113, 113, 0.35) !important;
+  border-color: rgba(248, 113, 113, 0.35);
   background: rgba(127, 29, 29, 0.12);
 }
 
-/* ——— Kanban ——— */
-.kanban-board {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.5rem 0 1.5rem;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  min-height: 12rem;
-}
+/* Styles Kanban détaillés : voir kanban.css */
 
-.kanban-board[aria-busy="true"] {
-  opacity: 0.72;
-  pointer-events: none;
-}
-
-.kanban-column {
-  flex: 0 0 min(100%, 18rem);
-  scroll-snap-align: start;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 14rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface-column);
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-elevated);
-  overflow: hidden;
-}
-
-.kanban-column--add {
-  min-height: 10rem;
-  background: rgba(15, 23, 42, 0.5);
-  border-style: dashed;
-  align-items: stretch;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.column-header {
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid var(--border-subtle);
-  border-top: 3px solid var(--column-accent, #64748b);
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.column-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.column-header h3 {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  cursor: grab;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.column-header-actions {
-  display: flex;
-  gap: 0.25rem;
-  flex-shrink: 0;
-}
-
-.column-task-count {
-  display: inline-block;
-  margin-top: 0.35rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.tasks {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.65rem;
-  min-height: 4rem;
-  max-height: min(60vh, 28rem);
-  overflow-y: auto;
-}
-
-.tasks.drop-hover {
-  outline: 2px dashed var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-.kanban-column.column-drop-hover {
-  box-shadow: 0 0 0 2px var(--accent);
-}
-
-.task {
-  padding: 0.65rem 0.75rem;
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: border-color 0.12s ease, transform 0.12s ease;
-}
-
-.task:hover {
-  border-color: var(--border-strong);
-}
-
-.task:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.task.is-dragging {
-  opacity: 0.55;
-}
-
-.task h4 {
-  margin: 0 0 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.task p {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.task.priority-low {
-  border-left: 3px solid var(--priority-low);
-}
-
-.task.priority-medium {
-  border-left: 3px solid var(--priority-medium);
-}
-
-.task.priority-high {
-  border-left: 3px solid var(--priority-high);
-}
-
-.task.priority-urgent {
-  border-left: 3px solid var(--priority-urgent);
-}
-
-.kanban-column .add-task {
-  margin: 0 0.65rem 0.65rem;
-}
-
-.icon-btn {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.6);
-  color: var(--muted-readable);
-  font-size: 0.875rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-
-.icon-btn:hover {
-  background: rgba(51, 65, 85, 0.85);
-  color: var(--text);
-}
-
-.icon-btn--danger:hover {
-  border-color: rgba(248, 113, 113, 0.5);
-  color: #fecaca;
-}
-
-.kanban-column.is-column-dragging {
-  opacity: 0.85;
-  box-shadow: var(--shadow-card);
-}
-
-/* ——— Modales TaskFlow (hors composant JS Bootstrap) ——— */
+/* ——— Modales TaskFlow ——— */
 .tf-modal-host {
   position: fixed;
   inset: 0;
@@ -402,6 +326,10 @@ main#main-content:focus-visible {
   border-top: 1px solid var(--border-subtle);
 }
 
+.tf-modal-actions .tf-btn--danger:first-child {
+  margin-right: auto;
+}
+
 /* Compte : liste définition */
 .account-dl {
   display: grid;
@@ -432,6 +360,12 @@ main#main-content:focus-visible {
   margin: 0 0 0.75rem;
 }
 
+.account-password-block {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
 .account-password-actions {
   margin-top: 0.75rem;
 }
@@ -450,6 +384,31 @@ main#main-content:focus-visible {
 .auth-wrap {
   min-height: calc(100vh - 4.5rem);
   padding: clamp(1.25rem, 4vw, 2.5rem) 0;
+}
+
+.auth-section-inner {
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+.p-auth {
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .p-auth {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+}
+
+.tf-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.text-center {
+  text-align: center;
 }
 
 .auth-wrap::before {
@@ -484,13 +443,38 @@ main#main-content:focus-visible {
   font-size: 0.9375rem;
 }
 
-.auth-card .nav-pills .nav-link {
-  color: var(--muted-readable);
+.tf-auth-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-deep);
+  border: 1px solid var(--border-subtle);
 }
 
-.auth-card .nav-pills .nav-link.active {
-  background: linear-gradient(135deg, #0284c7 0%, #4f46e5 90%);
+.tf-auth-tab {
+  flex: 1;
+  padding: 0.5rem 0.65rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted-readable);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tf-auth-tab[aria-selected="true"],
+.tf-auth-tab.active {
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 95%);
   color: #fff;
+}
+
+.tf-auth-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .auth-reveal-btn {
@@ -517,9 +501,67 @@ main#main-content:focus-visible {
   display: none !important;
 }
 
+.about-section {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.about-inner {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+.about-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 576px) {
+  .about-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.footer-links-wrap {
+  text-align: start;
+}
+
+@media (min-width: 768px) {
+  .footer-links-wrap {
+    text-align: end;
+  }
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-nav a {
+  color: var(--accent-hover);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+
+.footer-nav a:hover {
+  text-decoration: underline;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .skip-link,
-  .task {
+  .skip-link {
     transition: none;
   }
 }

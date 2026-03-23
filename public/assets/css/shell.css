@@ -1,0 +1,787 @@
+/**
+ * Shell TaskFlow — layout, navigation, formulaires, sans Bootstrap.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface-deep);
+}
+
+h1,
+h2,
+h3,
+.tf-h1,
+.tf-h2,
+.tf-h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.tf-container {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.tf-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.tf-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(8, 9, 14, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.tf-nav-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  min-height: 3.25rem;
+  padding-block: 0.5rem;
+}
+
+.tf-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.tf-brand .brand-mark {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+  max-width: 11rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.tf-nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tf-nav-toggle:hover {
+  border-color: var(--accent);
+}
+
+.tf-nav-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tf-nav-toggle-icon {
+  display: block;
+  width: 1.25rem;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+}
+
+@media (min-width: 992px) {
+  .tf-nav-toggle {
+    display: none;
+  }
+}
+
+.tf-nav-panel {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.tf-nav-panel.is-open {
+  display: flex;
+}
+
+@media (min-width: 992px) {
+  .tf-nav-panel {
+    display: flex !important;
+    width: auto;
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+.tf-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 992px) {
+  .tf-nav-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-inline: auto;
+  }
+}
+
+.tf-nav-links a,
+.tf-nav-links button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted-readable);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (min-width: 992px) {
+  .tf-nav-links a,
+  .tf-nav-links button {
+    width: auto;
+  }
+}
+
+.tf-nav-links a:hover,
+.tf-nav-links button:hover {
+  color: var(--text);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.tf-nav-user {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+@media (min-width: 992px) {
+  .tf-nav-user {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.tf-nav-user-label {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ——— Boutons ——— */
+.tf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tf-btn:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: var(--shadow-card);
+}
+
+.tf-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tf-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tf-btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  color: #fff;
+}
+
+.tf-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.tf-btn--success {
+  border-color: transparent;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #fff;
+}
+
+.tf-btn--ghost {
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--muted-readable);
+}
+
+.tf-btn--ghost:hover {
+  color: var(--text);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.tf-btn--danger {
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fecaca;
+}
+
+.tf-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.tf-btn--sm {
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.tf-btn--block {
+  width: 100%;
+}
+
+.tf-btn--link {
+  display: inline;
+  min-height: unset;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-hover);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.tf-btn--link:hover {
+  text-decoration: underline;
+  box-shadow: none;
+}
+
+/* ——— Champs ——— */
+.tf-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tf-input,
+.tf-select,
+.tf-textarea {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+
+.tf-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.tf-input:focus-visible,
+.tf-select:focus-visible,
+.tf-textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-strong);
+}
+
+.tf-input--color {
+  min-height: 2.75rem;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+.tf-field {
+  margin-bottom: 1rem;
+}
+
+.tf-field:last-child {
+  margin-bottom: 0;
+}
+
+.tf-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.tf-input-row .tf-input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+/* ——— Cartes & grille dashboard ——— */
+.tf-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-elevated);
+}
+
+.tf-card-body {
+  padding: 1rem 1.15rem;
+}
+
+.tf-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .tf-grid--dash {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .tf-grid--dash {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tf-muted {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.tf-lead {
+  font-size: 1rem;
+  color: var(--muted-readable);
+  line-height: 1.55;
+}
+
+/* ——— Board layout + sidebar ——— */
+.tf-board-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .tf-board-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.tf-board-sidebar {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-void);
+  padding: 0.85rem 0.65rem;
+}
+
+@media (min-width: 900px) {
+  .tf-board-sidebar {
+    width: 11.5rem;
+    position: sticky;
+    top: 4.5rem;
+  }
+}
+
+.tf-board-sidebar-title {
+  margin: 0 0 0.5rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3a3958;
+}
+
+.tf-board-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+@media (min-width: 900px) {
+  .tf-board-list {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+}
+
+.tf-board-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tf-board-item:hover {
+  color: var(--text);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.tf-board-item.is-active {
+  color: var(--text);
+  background: var(--surface-card);
+  border-left: 2px solid var(--accent);
+}
+
+.tf-board-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tf-board-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.tf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tf-hidden-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ——— Palette commande (Ctrl+K) ——— */
+.tf-palette-host[hidden] {
+  display: none !important;
+}
+
+.tf-palette-host {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 1rem;
+}
+
+.tf-palette-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.tf-palette {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 28rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.tf-palette-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.85rem 1rem;
+  background: var(--surface-card);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+
+.tf-palette-input:focus {
+  outline: none;
+}
+
+.tf-palette-hint {
+  margin: 0;
+  padding: 0.65rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tf-palette-hint kbd {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--surface-deep);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.7rem;
+}
+
+.tf-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.tf-palette-item {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tf-palette-item:hover,
+.tf-palette-item.is-active {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.tf-shortcut-list p {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-readable);
+}
+
+.tf-shortcut-list kbd {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  margin: 0 0.1rem;
+  border-radius: 4px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+}
+
+/* ——— Toasts ——— */
+.tf-toast-host {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.tf-toast {
+  pointer-events: auto;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  color: var(--text);
+  font-size: 0.8125rem;
+  box-shadow: var(--shadow-elevated);
+  animation: tf-toast-in 0.2s ease-out;
+}
+
+.tf-toast--error {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+}
+
+@keyframes tf-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-toast {
+    animation: none;
+  }
+}
+
+/* ——— Alertes ——— */
+.tf-alert {
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  border: 1px solid var(--border-subtle);
+}
+
+.tf-alert--danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: #fecaca;
+}
+
+/* ——— Skeletons Kanban ——— */
+.tf-skeleton-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  min-height: 14rem;
+  padding-bottom: 0.5rem;
+}
+
+.tf-skeleton-col {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-column);
+  padding: 0.75rem;
+  min-height: 12rem;
+}
+
+.tf-skeleton-line {
+  height: 0.65rem;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-card) 0%,
+    rgba(99, 102, 241, 0.12) 50%,
+    var(--surface-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: tf-shimmer 1.2s ease-in-out infinite;
+  margin-bottom: 0.5rem;
+}
+
+.tf-skeleton-line--short {
+  width: 55%;
+}
+
+.tf-skeleton-card {
+  height: 3.25rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.45rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.tf-skeleton-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: tf-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes tf-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-skeleton-line,
+  .tf-skeleton-card::after {
+    animation: none;
+  }
+}

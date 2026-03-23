@@ -16,6 +16,20 @@ Kanban fullstack autonome en PHP 8.2 + MySQL + Vanilla JS + Docker.
 5. Ouvrir:
    - [http://localhost:8080](http://localhost:8080)
 
+## Developpement local (PHP built-in server)
+
+Depuis la racine du projet, **utilise le router dédié** (recommandé) pour que `/assets/*` soit servi avec les bons types MIME:
+
+```bash
+php -S localhost:8080 -t public public/router.php
+```
+
+Alternative (moins fiable selon l’OS): `php -S localhost:8080 -t public public/index.php` — `index.php` tente aussi de servir `/assets/` manuellement.
+
+Verification: `http://localhost:8080/assets/css/auth.css` doit renvoyer du **CSS** (`text/css`), pas du **JSON**.
+
+**Sans CSS charge**, la classe `.hidden` ne masque rien: l’app utilise l’attribut HTML `hidden` pour le board / logout tant que le JS n’a pas fini, afin d’éviter d’afficher le Kanban avant connexion.
+
 ## Endpoints API
 
 ### Auth

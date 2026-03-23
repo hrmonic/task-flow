@@ -8,7 +8,6 @@ use App\Services\ResponseService;
 
 final class Router
 {
-    /** @var array<string, array<int, array{pattern: string, handler: callable}>> */
     private array $routes = [];
 
     public function get(string $pattern, callable $handler): void { $this->add('GET', $pattern, $handler); }

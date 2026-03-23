@@ -1,7 +1,9 @@
 import { apiFetch } from "./api.js";
+import { escapeHtml, taskPriorityClass } from "./escape.js";
 import { openTaskModal } from "./taskModal.js";
 
 export async function loadBoard(boardId) {
+  if (!boardId) return;
   const columns = await apiFetch(`/api/boards/${boardId}/columns`);
   const withTasks = await Promise.all(
     columns.map(async (col) => ({ ...col, tasks: await apiFetch(`/api/columns/${col.id}/tasks`) }))
@@ -12,35 +14,44 @@ export async function loadBoard(boardId) {
 export function renderBoard(columns) {
   const board = document.getElementById("kanbanBoard");
   board.innerHTML = columns
-    .map(
-      (col) => `
-      <section class="kanban-column" data-column-id="${col.id}">
+    .map((col) => {
+      const colId = escapeHtml(col.id);
+      const colName = escapeHtml(col.name);
+      const tasksHtml = col.tasks
+        .map((t) => {
+          const pr = taskPriorityClass(t.priority);
+          return `<article class="task priority-${pr}" draggable="true" data-task-id="${escapeHtml(t.id)}">
+                <h4>${escapeHtml(t.title)}</h4><p>${escapeHtml(t.description || "")}</p>
+              </article>`;
+        })
+        .join("");
+      return `
+      <section class="kanban-column" data-column-id="${colId}">
         <header>
-          <h3>${col.name}</h3>
+          <h3>${colName}</h3>
           <span>${col.tasks.length}</span>
         </header>
-        <div class="tasks" data-drop-column="${col.id}">
-          ${col.tasks
-            .map(
-              (t) => `<article class="task priority-${t.priority}" draggable="true" data-task-id="${t.id}">
-                <h4>${t.title}</h4><p>${t.description || ""}</p>
-              </article>`
-            )
-            .join("")}
+        <div class="tasks" data-drop-column="${colId}">
+          ${tasksHtml}
         </div>
-        <button class="btn add-task" data-column-id="${col.id}">+ Add task</button>
-      </section>`
-    )
+        <button type="button" class="btn add-task" data-column-id="${colId}">+ Add task</button>
+      </section>`;
+    })
     .join("");
 
   initDragAndDrop();
   board.querySelectorAll(".add-task").forEach((btn) => {
-    btn.addEventListener("click", () => openTaskModal({
-      onSave: async (payload) => {
-        await apiFetch(`/api/columns/${btn.dataset.columnId}/tasks`, { method: "POST", body: JSON.stringify(payload) });
-        await loadBoard(document.getElementById("boardSelect").value);
-      },
-    }));
+    btn.addEventListener("click", () => {
+      const columnId = btn.dataset.columnId;
+      if (!columnId) return;
+      openTaskModal({
+        onSave: async (payload) => {
+          await apiFetch(`/api/columns/${columnId}/tasks`, { method: "POST", body: JSON.stringify(payload) });
+          const sel = document.getElementById("boardSelect");
+          await loadBoard(sel ? sel.value : "");
+        },
+      });
+    });
   });
 }
 
@@ -62,7 +73,14 @@ export function initDragAndDrop() {
       zone.classList.remove("drop-hover");
       if (!currentTaskId) return;
       const newColumnId = zone.dataset.dropColumn;
-      const optimisticCard = document.querySelector(`[data-task-id="${currentTaskId}"]`);
+      if (!newColumnId) {
+        currentTaskId = null;
+        return;
+      }
+      let optimisticCard = null;
+      document.querySelectorAll("[data-task-id]").forEach((el) => {
+        if (el.dataset.taskId === currentTaskId) optimisticCard = el;
+      });
       const oldParent = optimisticCard?.parentElement;
       if (optimisticCard) zone.appendChild(optimisticCard);
       try {

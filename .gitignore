@@ -1,0 +1,8 @@
+.env
+/vendor
+/node_modules
+/storage
+/var
+.DS_Store
+.phpunit.result.cache
+.cursor/

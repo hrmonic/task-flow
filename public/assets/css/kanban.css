@@ -843,6 +843,18 @@
   border-color: #e67e22 !important;
 }
 
+:root[data-theme="light"] .task-priority-pill--low {
+  background: #dce9ff !important;
+  color: #1f3f7a !important;
+  border-color: #5b8def !important;
+}
+
+:root[data-theme="light"] .task-priority-pill--urgent {
+  background: #ffc8cc !important;
+  color: #8f0010 !important;
+  border-color: #e53950 !important;
+}
+
 :root[data-theme="dark"] .task-priority-pill--medium,
 :root:not([data-theme]) .task-priority-pill--medium {
   background: #5a4600 !important;
@@ -855,6 +867,20 @@
   background: #5b2500 !important;
   color: #ff9a52 !important;
   border-color: #f97316 !important;
+}
+
+:root[data-theme="dark"] .task-priority-pill--low,
+:root:not([data-theme]) .task-priority-pill--low {
+  background: #1b2f56 !important;
+  color: #8eb6ff !important;
+  border-color: #5b8def !important;
+}
+
+:root[data-theme="dark"] .task-priority-pill--urgent,
+:root:not([data-theme]) .task-priority-pill--urgent {
+  background: #56131b !important;
+  color: #ff7f8d !important;
+  border-color: #ef4444 !important;
 }
 
 /* MODE LIGHT : ENTETE VIOLET + TEXTE BLANC */

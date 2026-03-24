@@ -14,6 +14,7 @@ import { loadBoard, reloadActiveBoard } from "./kanban.js";
 const state = { boards: [], activeBoardId: null };
 const THEME_STORAGE_KEY = "taskflow_theme";
 const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
+const ACTIVE_BOARD_STORAGE_KEY = "taskflow_active_board_id";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
@@ -117,6 +118,16 @@ function persistAppView(view) {
   if (view === "dashboard" || view === "boards") {
     localStorage.setItem(APP_VIEW_STORAGE_KEY, view);
   }
+}
+
+function getStoredActiveBoardId() {
+  const stored = localStorage.getItem(ACTIVE_BOARD_STORAGE_KEY);
+  return stored && stored.trim() ? stored : null;
+}
+
+function persistActiveBoardId(boardId) {
+  if (!boardId) return;
+  localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, boardId);
 }
 
 /** @param {"dashboard" | "boards" | "auth"} view */
@@ -293,6 +304,7 @@ function renderBoardSidebar(boards, activeId) {
       const sel = document.getElementById("boardSelect");
       if (sel) sel.value = b.id;
       state.activeBoardId = b.id;
+      persistActiveBoardId(state.activeBoardId);
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
       try {
@@ -330,6 +342,7 @@ async function createBoardByName(rawName) {
     fillBoardSelect(select, state.boards);
     select.value = board.id;
     state.activeBoardId = board.id;
+    persistActiveBoardId(state.activeBoardId);
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(board.id);
@@ -898,7 +911,15 @@ async function bootstrapBoard() {
       state.boards = [b];
     }
     fillBoardSelect(select, state.boards);
-    state.activeBoardId = select.value || state.boards[0].id;
+    const storedBoardId = getStoredActiveBoardId();
+    const hasStoredBoard = storedBoardId
+      ? state.boards.some((b) => b.id === storedBoardId)
+      : false;
+    state.activeBoardId = hasStoredBoard
+      ? storedBoardId
+      : select.value || state.boards[0].id;
+    select.value = state.activeBoardId;
+    persistActiveBoardId(state.activeBoardId);
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(state.activeBoardId);
@@ -917,6 +938,7 @@ async function bootstrapBoard() {
 
   select.onchange = async () => {
     state.activeBoardId = select.value;
+    persistActiveBoardId(state.activeBoardId);
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     try {
@@ -986,6 +1008,7 @@ async function bootstrapBoard() {
       }
       fillBoardSelect(select, state.boards);
       state.activeBoardId = select.value;
+      persistActiveBoardId(state.activeBoardId);
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(state.activeBoardId);
@@ -1000,6 +1023,7 @@ async function bootstrapBoard() {
 
 document.getElementById("logoutBtn").onclick = () => {
   localStorage.removeItem(APP_VIEW_STORAGE_KEY);
+  localStorage.removeItem(ACTIVE_BOARD_STORAGE_KEY);
   logout();
   setAuthenticatedShell(false);
   location.reload();

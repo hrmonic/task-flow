@@ -33,10 +33,22 @@ function migrationLooksApplied(PDO $pdo, string $filename): bool
         '004_create_tasks.sql' => 'tasks',
         '005_create_board_contributors_and_invitations.sql' => 'board_contributors',
         '006_create_task_activity_logs.sql' => 'task_activity_logs',
+        '007_add_board_icon_fields.sql' => 'boards',
     ];
     $table = $tableByMigration[$filename] ?? null;
     if ($table === null) {
         return false;
+    }
+    if ($filename === '007_add_board_icon_fields.sql') {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.columns
+             WHERE table_schema = DATABASE()
+               AND table_name = :table_name
+               AND column_name IN (\'job_key\', \'rubric_key\', \'icon_key\')'
+        );
+        $stmt->execute(['table_name' => 'boards']);
+        return (int) $stmt->fetchColumn() === 3;
     }
     $stmt = $pdo->prepare(
         'SELECT COUNT(*)

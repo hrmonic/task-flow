@@ -20,6 +20,9 @@ final class BoardRepository
                 b.id,
                 b.name,
                 b.description,
+                b.job_key,
+                b.rubric_key,
+                b.icon_key,
                 b.created_at,
                 b.updated_at,
                 CASE WHEN b.user_id = :owner_user_id THEN 1 ELSE 0 END AS is_owner
@@ -37,19 +40,44 @@ final class BoardRepository
         return $stmt->fetchAll();
     }
 
-    public function create(string $userId, string $name, ?string $description): array
+    public function create(
+        string $userId,
+        string $name,
+        ?string $description,
+        ?string $jobKey = null,
+        ?string $rubricKey = null,
+        ?string $iconKey = null
+    ): array
     {
         $id = Uuid::uuid4()->toString();
         $this->pdo->beginTransaction();
-        $stmt = $this->pdo->prepare('INSERT INTO boards (id, user_id, name, description, created_at, updated_at) VALUES (:id,:user_id,:name,:description,NOW(),NOW())');
-        $stmt->execute(['id' => $id, 'user_id' => $userId, 'name' => $name, 'description' => $description]);
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO boards (id, user_id, name, description, job_key, rubric_key, icon_key, created_at, updated_at)
+             VALUES (:id,:user_id,:name,:description,:job_key,:rubric_key,:icon_key,NOW(),NOW())'
+        );
+        $stmt->execute([
+            'id' => $id,
+            'user_id' => $userId,
+            'name' => $name,
+            'description' => $description,
+            'job_key' => $jobKey,
+            'rubric_key' => $rubricKey,
+            'icon_key' => $iconKey,
+        ]);
         $owner = $this->pdo->prepare(
             "INSERT INTO board_contributors (board_id, user_id, role, added_by, created_at)
              VALUES (:board_id, :user_id, 'owner', :added_by, NOW())"
         );
         $owner->execute(['board_id' => $id, 'user_id' => $userId, 'added_by' => $userId]);
         $this->pdo->commit();
-        return ['id' => $id, 'name' => $name, 'description' => $description];
+        return [
+            'id' => $id,
+            'name' => $name,
+            'description' => $description,
+            'job_key' => $jobKey,
+            'rubric_key' => $rubricKey,
+            'icon_key' => $iconKey,
+        ];
     }
 
     public function belongsToUser(string $boardId, string $userId): bool
@@ -84,7 +112,7 @@ final class BoardRepository
     }
 
     /**
-     * @param array{name?: string, description?: string|null} $fields
+     * @param array{name?: string, description?: string|null, job_key?: string|null, rubric_key?: string|null, icon_key?: string|null} $fields
      */
     public function update(string $id, string $userId, array $fields): void
     {
@@ -97,6 +125,18 @@ final class BoardRepository
         if (array_key_exists('description', $fields)) {
             $set[] = 'description = :description';
             $params['description'] = $fields['description'];
+        }
+        if (array_key_exists('job_key', $fields)) {
+            $set[] = 'job_key = :job_key';
+            $params['job_key'] = $fields['job_key'];
+        }
+        if (array_key_exists('rubric_key', $fields)) {
+            $set[] = 'rubric_key = :rubric_key';
+            $params['rubric_key'] = $fields['rubric_key'];
+        }
+        if (array_key_exists('icon_key', $fields)) {
+            $set[] = 'icon_key = :icon_key';
+            $params['icon_key'] = $fields['icon_key'];
         }
         if ($set === []) {
             return;

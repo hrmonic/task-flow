@@ -20,7 +20,6 @@ const state = {
 const THEME_STORAGE_KEY = "taskflow_theme";
 const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
 const ACTIVE_BOARD_STORAGE_KEY = "taskflow_active_board_id";
-const BOARD_ICON_STORAGE_KEY = "taskflow_board_icon_map";
 const LAYOUT_SIDEBAR_KEY = "taskflow_layout_sidebar_visible";
 const LAYOUT_INFO_KEY = "taskflow_layout_info_visible";
 const LAYOUT_ACTIVITY_KEY = "taskflow_layout_activity_visible";
@@ -314,19 +313,9 @@ function wireBoardLayoutToggles() {
   });
 }
 
-function getBoardIconMap() {
-  try {
-    const raw = localStorage.getItem(BOARD_ICON_STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function setBoardIconMap(map) {
-  localStorage.setItem(BOARD_ICON_STORAGE_KEY, JSON.stringify(map));
+function getBoardById(boardId) {
+  if (!boardId) return null;
+  return state.boards.find((b) => b.id === boardId) || null;
 }
 
 function normalizeBoardIconKey(iconKey) {
@@ -335,29 +324,35 @@ function normalizeBoardIconKey(iconKey) {
 }
 
 function getBoardIconKey(boardId) {
-  if (!boardId) return "none";
-  const map = getBoardIconMap();
-  return normalizeBoardIconKey(map[boardId]);
+  const board = getBoardById(boardId);
+  return normalizeBoardIconKey(board?.icon_key || "none");
 }
 
 function setBoardIconKey(boardId, iconKey) {
-  if (!boardId) return;
-  const map = getBoardIconMap();
+  const board = getBoardById(boardId);
+  if (!board) return;
   const next = normalizeBoardIconKey(iconKey);
-  if (next === "none") {
-    delete map[boardId];
-  } else {
-    map[boardId] = next;
-  }
-  setBoardIconMap(map);
+  board.icon_key = next;
 }
 
-function removeBoardIconKey(boardId) {
-  if (!boardId) return;
-  const map = getBoardIconMap();
-  if (!Object.prototype.hasOwnProperty.call(map, boardId)) return;
-  delete map[boardId];
-  setBoardIconMap(map);
+async function persistBoardIconSelection(boardId, jobKey, rubricKey, iconKey) {
+  const board = getBoardById(boardId);
+  if (!board) return;
+  const normalizedJob = typeof jobKey === "string" && BOARD_JOB_CATALOG[jobKey] ? jobKey : "general";
+  const normalizedRubric = typeof rubricKey === "string" && rubricKey.trim() ? rubricKey : "default";
+  const normalizedIcon = normalizeBoardIconKey(iconKey);
+  board.job_key = normalizedJob;
+  board.rubric_key = normalizedRubric;
+  board.icon_key = normalizedIcon;
+  writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
+  await apiFetch(`/api/boards/${boardId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      job_key: normalizedJob,
+      rubric_key: normalizedRubric,
+      icon_key: normalizedIcon,
+    }),
+  });
 }
 
 function populateBoardJobSelect() {
@@ -429,9 +424,14 @@ function syncBoardIconSelect(boardId) {
   const rubricSelect = document.getElementById("boardRubricSelect");
   const select = document.getElementById("boardIconSelect");
   if (!select || !jobSelect || !rubricSelect) return;
+  const board = getBoardById(boardId);
   const iconKey = getBoardIconKey(boardId);
-  const jobKey = ICON_TO_JOB[iconKey] || "general";
-  const rubricKey = ICON_TO_RUBRIC[jobKey]?.[iconKey] || "default";
+  const jobKey = (typeof board?.job_key === "string" && BOARD_JOB_CATALOG[board.job_key])
+    ? board.job_key
+    : (ICON_TO_JOB[iconKey] || "general");
+  const rubricKey = (typeof board?.rubric_key === "string" && board.rubric_key.trim())
+    ? board.rubric_key
+    : (ICON_TO_RUBRIC[jobKey]?.[iconKey] || "default");
   jobSelect.value = jobKey;
   const selectedRubric = populateBoardRubricSelect(jobKey, rubricKey);
   populateBoardIconSelect(jobKey, selectedRubric, iconKey);
@@ -447,25 +447,40 @@ function wireBoardIconPicker() {
   const initialRubric = populateBoardRubricSelect("general", "default");
   populateBoardIconSelect("general", initialRubric, "none");
   renderBoardIconPreview("none");
-  jobSelect.addEventListener("change", () => {
+  jobSelect.addEventListener("change", async () => {
     const selectedRubric = populateBoardRubricSelect(jobSelect.value, "default");
     populateBoardIconSelect(jobSelect.value, selectedRubric, "none");
     renderBoardIconPreview(select.value || "none");
     if (!state.activeBoardId) return;
-    setBoardIconKey(state.activeBoardId, select.value || "none");
+    await persistBoardIconSelection(
+      state.activeBoardId,
+      jobSelect.value,
+      rubricSelect.value,
+      select.value || "none",
+    );
     renderBoardSidebar(state.boards, state.activeBoardId);
   });
-  rubricSelect.addEventListener("change", () => {
+  rubricSelect.addEventListener("change", async () => {
     const current = select.value || "none";
     populateBoardIconSelect(jobSelect.value, rubricSelect.value, current);
     renderBoardIconPreview(select.value || "none");
     if (!state.activeBoardId) return;
-    setBoardIconKey(state.activeBoardId, select.value || "none");
+    await persistBoardIconSelection(
+      state.activeBoardId,
+      jobSelect.value,
+      rubricSelect.value,
+      select.value || "none",
+    );
     renderBoardSidebar(state.boards, state.activeBoardId);
   });
-  select.addEventListener("change", () => {
+  select.addEventListener("change", async () => {
     if (!state.activeBoardId) return;
-    setBoardIconKey(state.activeBoardId, select.value);
+    await persistBoardIconSelection(
+      state.activeBoardId,
+      jobSelect.value,
+      rubricSelect.value,
+      select.value,
+    );
     renderBoardSidebar(state.boards, state.activeBoardId);
     renderBoardIconPreview(select.value || "none");
   });
@@ -1675,7 +1690,6 @@ async function bootstrapBoard(forceNetwork = false) {
     setBoardToolbarError("");
     try {
       await apiFetch(`/api/boards/${id}`, { method: "DELETE" });
-      removeBoardIconKey(id);
       state.boards = state.boards.filter((b) => b.id !== id);
       if (state.boards.length === 0) {
         const b = await apiFetch("/api/boards", {

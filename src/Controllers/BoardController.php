@@ -38,7 +38,19 @@ final class BoardController
     {
         $name = ValidationService::requiredString($payload, 'name', 2, 120);
         $description = isset($payload['description']) ? trim((string) $payload['description']) : null;
-        ResponseService::json(true, $this->boards->create($userId, $name, $description), null, [], 201);
+        $jobKey = isset($payload['job_key']) ? trim((string) $payload['job_key']) : null;
+        $rubricKey = isset($payload['rubric_key']) ? trim((string) $payload['rubric_key']) : null;
+        $iconKey = isset($payload['icon_key']) ? trim((string) $payload['icon_key']) : null;
+        $jobKey = $jobKey === '' ? null : mb_substr($jobKey, 0, 80);
+        $rubricKey = $rubricKey === '' ? null : mb_substr($rubricKey, 0, 80);
+        $iconKey = $iconKey === '' ? null : mb_substr($iconKey, 0, 120);
+        ResponseService::json(
+            true,
+            $this->boards->create($userId, $name, $description, $jobKey, $rubricKey, $iconKey),
+            null,
+            [],
+            201
+        );
     }
 
     public function update(string $userId, array $payload): void
@@ -63,6 +75,18 @@ final class BoardController
                     return;
                 }
                 $fields['description'] = $raw === '' ? null : $raw;
+            }
+            if (array_key_exists('job_key', $payload)) {
+                $raw = trim((string) $payload['job_key']);
+                $fields['job_key'] = $raw === '' ? null : mb_substr($raw, 0, 80);
+            }
+            if (array_key_exists('rubric_key', $payload)) {
+                $raw = trim((string) $payload['rubric_key']);
+                $fields['rubric_key'] = $raw === '' ? null : mb_substr($raw, 0, 80);
+            }
+            if (array_key_exists('icon_key', $payload)) {
+                $raw = trim((string) $payload['icon_key']);
+                $fields['icon_key'] = $raw === '' ? null : mb_substr($raw, 0, 120);
             }
             if ($fields === []) {
                 ResponseService::json(true, ['updated' => true], null);

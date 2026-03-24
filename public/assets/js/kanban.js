@@ -9,6 +9,56 @@ import {
 } from "./escape.js";
 import { openTaskModal } from "./taskModal.js";
 
+/**
+ * Variables CSS inline pour un en-tête de colonne lisible à partir d’un #RRGGBB.
+ * @param {string} hex
+ * @returns {string}
+ */
+function buildColumnThemeStyle(hex) {
+  const normalized =
+    typeof hex === "string" && /^#[0-9A-Fa-f]{6}$/.test(hex.trim())
+      ? hex.trim()
+      : "#64748b";
+  const n = parseInt(normalized.slice(1), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  const darkFg = luma > 0.62;
+  const fg = darkFg ? "#0f172a" : "#ffffff";
+  const r2 = Math.round(r * 0.88 + (darkFg ? 255 * 0.12 : 0));
+  const g2 = Math.round(g * 0.88 + (darkFg ? 255 * 0.12 : 0));
+  const b2 = Math.round(b * 0.88 + (darkFg ? 255 * 0.12 : 0));
+  const r3 = Math.round(r * 0.72);
+  const g3 = Math.round(g * 0.72);
+  const b3 = Math.round(b * 0.72);
+  const bg = `linear-gradient(152deg, rgb(${r},${g},${b}) 0%, rgb(${r2},${g2},${b2}) 52%, rgb(${r3},${g3},${b3}) 100%)`;
+  const border = darkFg ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.22)";
+  const pillBg = darkFg ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.18)";
+  const pillBorder = darkFg ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.32)";
+  const iconBg = darkFg ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.16)";
+  const iconBorder = darkFg ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.3)";
+  const iconHover = darkFg ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.28)";
+  const dangerHoverFg = darkFg ? "#b91c1c" : "#fecaca";
+  const dangerHoverBorder = darkFg ? "rgba(185,28,28,0.42)" : "rgba(248,113,113,0.45)";
+  const dangerHoverBg = darkFg ? "rgba(185,28,28,0.1)" : "rgba(127,29,29,0.35)";
+  const c = escapeHtml(normalized);
+  return [
+    `--column-accent:${c}`,
+    `--column-header-bg:${bg}`,
+    `--column-header-fg:${fg}`,
+    `--column-header-border:${border}`,
+    `--column-header-pill-bg:${pillBg}`,
+    `--column-header-pill-border:${pillBorder}`,
+    `--column-header-icon-bg:${iconBg}`,
+    `--column-header-icon-border:${iconBorder}`,
+    `--column-header-icon-hover-bg:${iconHover}`,
+    `--column-header-danger-hover-fg:${dangerHoverFg}`,
+    `--column-header-danger-hover-border:${dangerHoverBorder}`,
+    `--column-header-danger-hover-bg:${dangerHoverBg}`,
+  ].join(";");
+}
+
 let lastLoadedBoardId = null;
 const TASK_DONE_STORAGE_KEY = "taskflow_task_done";
 const BOARD_CACHE_STORAGE_KEY = "taskflow_board_cache_v1";
@@ -172,10 +222,11 @@ export function renderBoard(columns) {
     .map((col) => {
       const colId = escapeHtml(col.id);
       const colName = escapeHtml(col.name);
-      const rawColor = typeof col.color === "string" && /^#[0-9A-Fa-f]{6}$/.test(col.color)
-        ? col.color
-        : "#64748b";
-      const colColor = escapeHtml(rawColor);
+      const rawColor =
+        typeof col.color === "string" && /^#[0-9A-Fa-f]{6}$/.test(col.color)
+          ? col.color
+          : "#64748b";
+      const columnTheme = buildColumnThemeStyle(rawColor);
       const tasksHtml = col.tasks
         .map((t) => {
           const pr = taskPriorityClass(t.priority);
@@ -204,7 +255,7 @@ export function renderBoard(columns) {
         })
         .join("");
           return `
-      <section class="kanban-column" data-column-id="${colId}" aria-label="Colonne ${colName}" style="--column-accent:${colColor}">
+      <section class="kanban-column" data-column-id="${colId}" aria-label="Colonne ${colName}" style="${columnTheme}">
         <header class="column-header">
           <div class="column-header-row">
             <div class="column-header-left">

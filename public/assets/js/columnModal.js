@@ -63,8 +63,8 @@ export function openColumnModal({ column = null, onSave }) {
             <input id="columnName" class="tf-input" type="text" maxlength="120" autocomplete="off" />
           </div>
           <div class="tf-modal-field">
-            <label class="tf-label" for="columnColor" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Couleur (barre du haut)</label>
-            <input id="columnColor" class="tf-input tf-input--color" type="color" value="${escapeHtml(defaultColor)}" title="Couleur de la colonne" />
+            <label class="tf-label" for="columnColor" style="text-transform:none;letter-spacing:0;font-size:0.8125rem;font-weight:600">Couleur de l’en-tête</label>
+            <input id="columnColor" class="tf-input tf-input--color" type="color" value="${escapeHtml(defaultColor)}" title="Couleur de fond de l’en-tête de la colonne" />
           </div>
           <div class="tf-modal-actions">
             <button type="button" id="closeColumnBtn" class="tf-btn tf-btn--ghost">Annuler</button>

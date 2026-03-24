@@ -888,6 +888,9 @@
   max-height: none !important;
   overflow: visible !important;
   white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  min-width: 0;
 }
 
 /* MODE LIGHT : ENTETE VIOLET + TEXTE BLANC */
@@ -919,6 +922,12 @@
 
 .task-card-footer {
   flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.35rem;
+}
+
+.task-card-footer > * {
+  min-width: 0;
 }
 
 .task-check-toggle {
@@ -930,6 +939,8 @@
   color: var(--text-muted);
   user-select: none;
   cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .task-complete-toggle {
@@ -937,6 +948,13 @@
   inline-size: 0.9rem;
   block-size: 0.9rem;
   accent-color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.task-due {
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .task--inprogress {

@@ -147,28 +147,29 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                 <select id="boardSelect" class="tf-hidden-select" aria-hidden="true" tabindex="-1" title="Synchronisation interne"></select>
 
                 <div class="toolbar-grid">
-                  <div class="tf-field">
-                    <label class="tf-label" for="boardTitleInput">Nom du tableau</label>
+                  <div class="tf-field toolbar-field--active">
+                    <label class="tf-label" for="boardTitleInput">Tableau actif</label>
                     <div class="tf-input-row">
-                      <input id="boardTitleInput" type="text" class="tf-input" placeholder="Nom" autocomplete="off" maxlength="120" aria-label="Nom du tableau">
+                      <input id="boardTitleInput" type="text" class="tf-input" placeholder="Ex. Sprint marketing Q2" autocomplete="off" maxlength="120" aria-label="Titre du tableau actif">
                       <button type="button" id="saveBoardBtn" class="tf-btn tf-btn--primary">Enregistrer</button>
                     </div>
                   </div>
-                  <div class="tf-field">
-                    <label class="tf-label" for="boardDescInput">Description</label>
-                    <textarea id="boardDescInput" class="tf-textarea" rows="2" maxlength="2000" placeholder="Optionnel — objectifs, lien sprint…" aria-label="Description du tableau"></textarea>
+                  <div class="tf-field toolbar-field--desc">
+                    <label class="tf-label" for="boardDescInput">Description du tableau actif</label>
+                    <textarea id="boardDescInput" class="tf-textarea" rows="3" maxlength="2000" placeholder="Objectifs, périmètre, liens, notes d'équipe..." aria-label="Description du tableau actif"></textarea>
                   </div>
-                  <div class="tf-field">
-                    <label class="tf-label" for="newBoardName">Nouveau tableau</label>
+                  <div class="tf-field toolbar-field--new">
+                    <label class="tf-label" for="newBoardName">Créer un nouveau tableau</label>
                     <div class="tf-input-row">
-                      <input id="newBoardName" type="text" class="tf-input" placeholder="Ex. Sprint 12" autocomplete="off" maxlength="120">
+                      <input id="newBoardName" type="text" class="tf-input" placeholder="Ex. Backlog produit" autocomplete="off" maxlength="120" aria-label="Nom du nouveau tableau">
                       <button id="createBoardBtn" type="button" class="tf-btn tf-btn--success">Créer</button>
                     </div>
                   </div>
-                  <div class="danger-zone-card tf-card">
+                  <div class="danger-zone-card tf-card toolbar-danger">
                     <div class="tf-card-body py-3">
                       <span class="tf-label" style="color:var(--color-danger)">Zone sensible</span>
-                      <button type="button" id="deleteBoardBtn" class="tf-btn tf-btn--danger tf-btn--block tf-btn--sm" style="margin-top:0.5rem">Supprimer ce tableau</button>
+                      <p class="toolbar-help">Suppression définitive du tableau actif.</p>
+                      <button type="button" id="deleteBoardBtn" class="tf-btn tf-btn--danger tf-btn--sm">Supprimer ce tableau</button>
                     </div>
                   </div>
                 </div>

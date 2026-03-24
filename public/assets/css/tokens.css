@@ -69,6 +69,10 @@
   --kanban-count-text: #e8eafc;
   --kanban-priority-none: #4b4e68;
   --kanban-muted-text: #5c5b7a;
+  --task-inprogress-bg: rgba(99, 102, 241, 0.06);
+  --task-done-bg: rgba(16, 185, 129, 0.14);
+  --task-done-border: rgba(16, 185, 129, 0.42);
+  --task-done-text: #a7f3d0;
 }
 
 :root[data-theme="light"] {
@@ -120,4 +124,8 @@
   --kanban-count-text: #1e2a4c;
   --kanban-priority-none: #94a3b8;
   --kanban-muted-text: #55617a;
+  --task-inprogress-bg: rgba(79, 70, 229, 0.08);
+  --task-done-bg: rgba(16, 185, 129, 0.2);
+  --task-done-border: rgba(5, 150, 105, 0.38);
+  --task-done-text: #065f46;
 }

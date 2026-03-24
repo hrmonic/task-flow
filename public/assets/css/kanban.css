@@ -828,3 +828,50 @@
   transform: translateY(-1px);
 }
 
+.task-card-footer {
+  flex-wrap: wrap;
+}
+
+.task-check-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  user-select: none;
+  cursor: pointer;
+}
+
+.task-complete-toggle {
+  margin: 0;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  accent-color: var(--color-success);
+}
+
+.task--inprogress {
+  background-image:
+    linear-gradient(var(--task-inprogress-bg), var(--task-inprogress-bg)),
+    var(--kanban-card-bg);
+}
+
+.task--done {
+  background-image:
+    linear-gradient(var(--task-done-bg), var(--task-done-bg)),
+    var(--kanban-card-bg);
+  border-color: var(--task-done-border);
+}
+
+.task--done h4,
+.task--done .task-check-toggle {
+  color: var(--task-done-text);
+}
+
+.task--done p {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--task-done-text) 60%, transparent);
+  opacity: 0.82;
+}
+

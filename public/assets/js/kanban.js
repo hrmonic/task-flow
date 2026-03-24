@@ -10,6 +10,32 @@ import {
 import { openTaskModal } from "./taskModal.js";
 
 let lastLoadedBoardId = null;
+const TASK_DONE_STORAGE_KEY = "taskflow_task_done";
+
+function getTaskDoneMap() {
+  try {
+    const raw = localStorage.getItem(TASK_DONE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setTaskDoneMap(map) {
+  localStorage.setItem(TASK_DONE_STORAGE_KEY, JSON.stringify(map));
+}
+
+function setTaskDone(taskId, isDone) {
+  const map = getTaskDoneMap();
+  if (isDone) {
+    map[taskId] = 1;
+  } else {
+    delete map[taskId];
+  }
+  setTaskDoneMap(map);
+}
 
 function boardSelectValue() {
   const sel = document.getElementById("boardSelect");
@@ -80,7 +106,7 @@ function wireTaskCard(taskEl, task) {
   };
 
   taskEl.addEventListener("click", (e) => {
-    if (e.target.closest("a, button")) return;
+    if (e.target.closest("a, button, input, label")) return;
     openEditor();
   });
 
@@ -96,6 +122,7 @@ export function renderBoard(columns) {
   const board = document.getElementById("kanbanBoard");
   if (!board) return;
   const boardId = boardSelectValue();
+  const doneMap = getTaskDoneMap();
   const columnsHtml = columns
     .map((col) => {
       const colId = escapeHtml(col.id);
@@ -115,9 +142,16 @@ export function renderBoard(columns) {
           const dueHtml = dueRel
             ? `<span class="task-due">${escapeHtml(dueRel)}</span>`
             : "";
-          return `<article class="task priority-${pr}" draggable="true" data-task-id="${taskId}" tabindex="0" role="listitem" aria-label="Tâche : ${title}. Appuyez sur Entrée pour modifier.">
+          const isDone = Boolean(doneMap[t.id]);
+          const stateClass = isDone ? "task--done" : "task--inprogress";
+          const checkedAttr = isDone ? " checked" : "";
+          return `<article class="task priority-${pr} ${stateClass}" draggable="true" data-task-id="${taskId}" tabindex="0" role="listitem" aria-label="Tâche : ${title}. Appuyez sur Entrée pour modifier.">
                 <h4>${title}</h4>${desc ? `<p>${desc}</p>` : ""}
                 <div class="task-card-footer">
+                  <label class="task-check-toggle">
+                    <input type="checkbox" class="task-complete-toggle" data-task-id="${taskId}"${checkedAttr} />
+                    <span>Terminée</span>
+                  </label>
                   <span class="task-priority-pill task-priority-pill--${pr}"><span class="task-priority-dot" aria-hidden="true"></span>${prLabel}</span>
                   ${dueHtml}
                 </div>
@@ -180,6 +214,23 @@ export function renderBoard(columns) {
           await reloadActiveBoard();
         },
       });
+    });
+  });
+
+  board.querySelectorAll(".task-complete-toggle").forEach((input) => {
+    input.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    input.addEventListener("change", () => {
+      const taskId = input.dataset.taskId;
+      if (!taskId) return;
+      const card = input.closest(".task");
+      const isDone = input.checked;
+      setTaskDone(taskId, isDone);
+      if (card) {
+        card.classList.toggle("task--done", isDone);
+        card.classList.toggle("task--inprogress", !isDone);
+      }
     });
   });
 

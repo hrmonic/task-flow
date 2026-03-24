@@ -21,6 +21,14 @@ final class UserRepository
         return $row ?: null;
     }
 
+    public function findByName(string $name): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE LOWER(name) = LOWER(:name) LIMIT 1');
+        $stmt->execute(['name' => $name]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public function create(string $name, string $email, string $passwordHash): array
     {
         $id = Uuid::uuid4()->toString();
@@ -71,5 +79,18 @@ final class UserRepository
             'created_at' => (string) $row['created_at'],
             'last_login_at' => $row['last_login_at'] !== null ? (string) $row['last_login_at'] : null,
         ];
+    }
+
+    public function findByEmailOrName(string $identifier): ?array
+    {
+        $trimmed = trim($identifier);
+        if ($trimmed === '') {
+            return null;
+        }
+        if (str_contains($trimmed, '@')) {
+            return $this->findByEmail($trimmed);
+        }
+
+        return $this->findByName($trimmed);
     }
 }

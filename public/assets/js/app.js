@@ -11,7 +11,12 @@ import {
 import { popMoveSnapshot } from "./boardHistory.js";
 import { loadBoard, reloadActiveBoard } from "./kanban.js";
 
-const state = { boards: [], activeBoardId: null };
+const state = {
+  boards: [],
+  activeBoardId: null,
+  boardCanManageContributors: false,
+  pendingInvitations: [],
+};
 const THEME_STORAGE_KEY = "taskflow_theme";
 const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
 const ACTIVE_BOARD_STORAGE_KEY = "taskflow_active_board_id";
@@ -367,6 +372,177 @@ function setBoardToolbarError(message = "") {
   el.hidden = !message;
 }
 
+function updateInvitationBadge(count) {
+  const badge = document.getElementById("navInvitationCount");
+  if (!badge) return;
+  badge.hidden = count <= 0;
+  badge.textContent = String(count);
+}
+
+function renderInvitationPanel(invitations) {
+  const panel = document.getElementById("invitationPanel");
+  const list = document.getElementById("invitationList");
+  if (!panel || !list) return;
+  panel.hidden = invitations.length === 0;
+  list.replaceChildren();
+  invitations.forEach((inv) => {
+    const row = document.createElement("div");
+    row.className = "invitation-item";
+    const text = document.createElement("div");
+    text.className = "invitation-item-text";
+    text.textContent = `${inv.inviter_name} vous invite sur "${inv.board_name}"`;
+    row.appendChild(text);
+    const actions = document.createElement("div");
+    actions.className = "invitation-actions";
+    const accept = document.createElement("button");
+    accept.type = "button";
+    accept.className = "tf-btn tf-btn--success tf-btn--sm";
+    accept.textContent = "Accepter";
+    accept.addEventListener("click", () => respondInvitation(inv.id, "accept"));
+    const reject = document.createElement("button");
+    reject.type = "button";
+    reject.className = "tf-btn tf-btn--ghost tf-btn--sm";
+    reject.textContent = "Refuser";
+    reject.addEventListener("click", () => respondInvitation(inv.id, "reject"));
+    actions.append(accept, reject);
+    row.appendChild(actions);
+    list.appendChild(row);
+  });
+}
+
+async function refreshIncomingInvitations() {
+  if (!getToken()) return;
+  try {
+    const invitations = await apiFetch("/api/invitations");
+    state.pendingInvitations = Array.isArray(invitations) ? invitations : [];
+    updateInvitationBadge(state.pendingInvitations.length);
+    renderInvitationPanel(state.pendingInvitations);
+  } catch {
+    updateInvitationBadge(0);
+    renderInvitationPanel([]);
+  }
+}
+
+async function respondInvitation(invitationId, action) {
+  const endpoint = action === "accept" ? "accept" : "reject";
+  try {
+    await apiFetch(`/api/invitations/${invitationId}/${endpoint}`, { method: "POST", body: JSON.stringify({}) });
+    await refreshIncomingInvitations();
+    await bootstrapBoard();
+    showToast(action === "accept" ? "Invitation acceptée." : "Invitation refusée.");
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : "Action impossible.", true);
+  }
+}
+
+function wireInvitationNav() {
+  const btn = document.getElementById("openInvitationsBtn");
+  if (!btn) return;
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    showAppView("boards");
+    scrollToSection("invitationPanel");
+    closeMobileNav();
+  });
+}
+
+function renderBoardContributors(contributors, canManage) {
+  const host = document.getElementById("boardContributorsList");
+  if (!host) return;
+  host.replaceChildren();
+  contributors.forEach((c) => {
+    const chip = document.createElement("span");
+    chip.className =
+      "board-contributor-chip" + (c.role === "owner" ? " board-contributor-chip--owner" : "");
+    const name = document.createElement("span");
+    name.textContent = c.name;
+    const role = document.createElement("span");
+    role.className = "board-contributor-chip-role";
+    role.textContent = c.role === "owner" ? "Propriétaire" : "Contributeur";
+    chip.append(name, role);
+    if (canManage && c.role !== "owner") {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "board-contributor-remove";
+      remove.title = "Retirer ce contributeur";
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        removeContributor(c.id);
+      });
+      chip.appendChild(remove);
+    }
+    host.appendChild(chip);
+  });
+}
+
+async function refreshBoardContributors() {
+  const input = document.getElementById("boardContributorInput");
+  const btn = document.getElementById("boardInviteBtn");
+  if (!state.activeBoardId) {
+    renderBoardContributors([], false);
+    if (input) input.disabled = true;
+    if (btn) btn.disabled = true;
+    return;
+  }
+  try {
+    const data = await apiFetch(`/api/boards/${state.activeBoardId}/contributors`);
+    const contributors = Array.isArray(data?.contributors) ? data.contributors : [];
+    const canManage = Boolean(data?.can_manage);
+    state.boardCanManageContributors = canManage;
+    if (input) input.disabled = !canManage;
+    if (btn) btn.disabled = !canManage;
+    renderBoardContributors(contributors, canManage);
+  } catch {
+    state.boardCanManageContributors = false;
+    if (input) input.disabled = true;
+    if (btn) btn.disabled = true;
+    renderBoardContributors([], false);
+  }
+}
+
+async function inviteContributorFromInput() {
+  const input = document.getElementById("boardContributorInput");
+  const btn = document.getElementById("boardInviteBtn");
+  if (!input || !btn || !state.activeBoardId) return;
+  const identifier = input.value.trim();
+  if (!identifier) {
+    setBoardToolbarError("Indiquez un nom d'utilisateur ou un email.");
+    input.focus();
+    return;
+  }
+  setBoardToolbarError("");
+  btn.disabled = true;
+  try {
+    const data = await apiFetch(`/api/boards/${state.activeBoardId}/contributors/invite`, {
+      method: "POST",
+      body: JSON.stringify({ identifier }),
+    });
+    input.value = "";
+    await refreshBoardContributors();
+    await refreshIncomingInvitations();
+    if (data?.mail_sent) {
+      showToast("Invitation envoyée (application + e-mail).");
+    } else {
+      showToast("Invitation envoyée dans l'application (e-mail non envoyé).");
+    }
+  } catch (err) {
+    setBoardToolbarError(err instanceof Error ? err.message : "Invitation impossible.");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function removeContributor(userId) {
+  if (!state.activeBoardId || !state.boardCanManageContributors) return;
+  try {
+    await apiFetch(`/api/boards/${state.activeBoardId}/contributors/${userId}`, { method: "DELETE" });
+    await refreshBoardContributors();
+    showToast("Contributeur retiré.");
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : "Suppression impossible.", true);
+  }
+}
+
 function fillBoardSelect(selectEl, boards) {
   if (!selectEl) return;
   selectEl.replaceChildren();
@@ -454,6 +630,7 @@ async function createBoardByName(rawName) {
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(board.id);
+    await refreshBoardContributors();
     return true;
   } catch (err) {
     const message =
@@ -489,6 +666,20 @@ function wireSidebarBoardCreator() {
     if (e.key !== "Enter") return;
     e.preventDefault();
     submitCreate();
+  });
+}
+
+function wireContributorControls() {
+  const input = document.getElementById("boardContributorInput");
+  const btn = document.getElementById("boardInviteBtn");
+  if (!input || !btn) return;
+  btn.addEventListener("click", () => {
+    inviteContributorFromInput();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    inviteContributorFromInput();
   });
 }
 
@@ -1004,6 +1195,7 @@ async function bootstrapBoard() {
   refreshNavUser();
   wireSidebarBoardCreator();
   wireBoardIconPicker();
+  wireContributorControls();
 
   logoutBtn.hidden = false;
   authSection.hidden = true;
@@ -1032,6 +1224,8 @@ async function bootstrapBoard() {
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(state.activeBoardId);
+    await refreshBoardContributors();
+    await refreshIncomingInvitations();
   } catch (err) {
     kanban.replaceChildren();
     const msg = document.createElement("p");
@@ -1052,6 +1246,7 @@ async function bootstrapBoard() {
     renderBoardSidebar(state.boards, state.activeBoardId);
     try {
       await loadBoard(state.activeBoardId);
+      await refreshBoardContributors();
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Chargement du tableau impossible.",
@@ -1087,6 +1282,7 @@ async function bootstrapBoard() {
       select.value = id;
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
+      await refreshBoardContributors();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Enregistrement impossible.",
@@ -1122,6 +1318,7 @@ async function bootstrapBoard() {
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(state.activeBoardId);
+      await refreshBoardContributors();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Suppression impossible.",
@@ -1142,6 +1339,7 @@ document.getElementById("logoutBtn").onclick = () => {
 wireMobileNav();
 wireShellNavigation();
 wireAccountModal();
+wireInvitationNav();
 wireGlobalShortcuts();
 initTheme();
 wireThemeToggle();

@@ -6,6 +6,7 @@ use App\Config\Router;
 use App\Controllers\AuthController;
 use App\Controllers\BoardController;
 use App\Controllers\ColumnController;
+use App\Controllers\InvitationController;
 use App\Controllers\TaskController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CorsMiddleware;
@@ -119,6 +120,7 @@ $authController = new AuthController();
 $boardController = new BoardController();
 $columnController = new ColumnController();
 $taskController = new TaskController();
+$invitationController = new InvitationController();
 
 $router->post('/api/auth/register', fn(array $params) => $authController->register($params));
 $router->post('/api/auth/login', fn(array $params) => $authController->login($params));
@@ -130,6 +132,13 @@ $router->get('/api/boards', fn(array $params) => $auth->run(fn(string $userId) =
 $router->post('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->create($userId, $params)));
 $router->patch('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->update($userId, $params)));
 $router->delete('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->delete($userId, $params)));
+$router->get('/api/boards/{id}/contributors', fn(array $params) => $auth->run(fn(string $userId) => $boardController->contributors($userId, $params)));
+$router->post('/api/boards/{id}/contributors/invite', fn(array $params) => $auth->run(fn(string $userId) => $boardController->inviteContributor($userId, $params)));
+$router->delete('/api/boards/{id}/contributors/{user_id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->removeContributor($userId, $params)));
+
+$router->get('/api/invitations', fn(array $params) => $auth->run(fn(string $userId) => $invitationController->index($userId)));
+$router->post('/api/invitations/{id}/accept', fn(array $params) => $auth->run(fn(string $userId) => $invitationController->accept($userId, $params)));
+$router->post('/api/invitations/{id}/reject', fn(array $params) => $auth->run(fn(string $userId) => $invitationController->reject($userId, $params)));
 
 $router->get('/api/boards/{id}/columns', fn(array $params) => $auth->run(fn(string $userId) => $columnController->index($userId, $params)));
 $router->post('/api/boards/{id}/columns', fn(array $params) => $auth->run(fn(string $userId) => $columnController->create($userId, $params)));

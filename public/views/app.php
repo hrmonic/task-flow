@@ -73,6 +73,9 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
           <li class="app-only">
             <button type="button" id="openAccountBtn">Mon compte</button>
           </li>
+          <li class="app-only">
+            <button type="button" id="openInvitationsBtn">Invitations <span id="navInvitationCount" class="tf-nav-badge" hidden>0</span></button>
+          </li>
           <li>
             <a href="#aboutSection" data-nav-target="about">À propos</a>
           </li>
@@ -166,6 +169,14 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                       <label class="tf-label board-icon-picker-label" for="boardIconSelect">Nature du tableau</label>
                       <select id="boardIconSelect" class="tf-select board-icon-select" aria-label="Choisir la nature du tableau"></select>
                     </div>
+                    <div class="board-contributor-create">
+                      <label class="tf-label board-icon-picker-label" for="boardContributorInput">Ajouter un contributeur (email ou nom)</label>
+                      <div class="tf-input-row">
+                        <input id="boardContributorInput" type="text" class="tf-input" placeholder="ex: marie@entreprise.com ou Marie" autocomplete="off" maxlength="190" aria-label="Ajouter un contributeur">
+                        <button type="button" id="boardInviteBtn" class="tf-btn tf-btn--ghost">Inviter</button>
+                      </div>
+                    </div>
+                    <div id="boardContributorsList" class="board-contributors-list"></div>
                   </div>
                   <div class="tf-field toolbar-field--desc">
                     <label class="tf-label" for="boardDescInput">Description du tableau actif</label>
@@ -183,6 +194,12 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
             </div>
 
             <div id="boardToolbarError" class="board-inline-error" hidden role="alert" aria-live="polite"></div>
+            <div id="invitationPanel" class="tf-card invitation-panel" hidden>
+              <div class="tf-card-body">
+                <h3 class="tf-h3" style="font-size:1rem;margin-bottom:0.5rem">Invitations reçues</h3>
+                <div id="invitationList" class="invitation-list"></div>
+              </div>
+            </div>
             <div id="kanbanBoard" class="kanban-board" aria-busy="false"></div>
           </div>
         </div>

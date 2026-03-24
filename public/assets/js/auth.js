@@ -23,6 +23,7 @@ export function setSessionUser(user) {
     localStorage.setItem(
       USER_KEY,
       JSON.stringify({
+        id: typeof user.id === "string" ? user.id : "",
         name: user.name,
         email: typeof user.email === "string" ? user.email : "",
       }),
@@ -39,6 +40,7 @@ export async function refreshProfileFromApi() {
   const data = await apiFetch("/api/auth/me");
   if (data?.name) {
     setSessionUser({
+      id: typeof data.id === "string" ? data.id : "",
       name: data.name,
       email: typeof data.email === "string" ? data.email : "",
     });

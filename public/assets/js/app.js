@@ -39,6 +39,22 @@ const BOARD_DOT_PALETTE = [
 
 const BOARD_ICON_LIBRARY = {
   none: { label: "Aucun pictogramme", svg: "" },
+  fs_fe_ui_design: { label: "UI Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2.5" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/><rect x="5.5" y="7" width="6.5" height="3" rx="1" fill="#A5B4FC"/><rect x="13" y="7" width="5.5" height="8" rx="1" fill="#C7D2FE"/><rect x="5.5" y="11" width="6.5" height="4" rx="1" fill="#818CF8"/><path d="M8 20h8" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  fs_fe_ux_design: { label: "UX Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12c0-4.4 3.6-8 8-8h7v7c0 4.4-3.6 8-8 8H4v-7Z" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.5"/><circle cx="10" cy="10" r="2" fill="#38BDF8"/><path d="M14 14c-1 .9-2.2 1.4-3.8 1.4" stroke="#0EA5E9" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="6" r="2.2" fill="#FDBA74"/></svg>` },
+  fs_fe_accessibility: { label: "Accessibilité front", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="5.3" r="2.3" fill="#34D399"/><path d="M5 9h14M12 9v10M8.8 19l3.2-5 3.2 5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="3" width="18" height="18" rx="4" stroke="#10B981" stroke-width="1.5"/></svg>` },
+  fs_fe_state_management: { label: "State Management", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.3" fill="#60A5FA"/><circle cx="18" cy="6" r="2.3" fill="#A78BFA"/><circle cx="12" cy="18" r="2.5" fill="#F472B6"/><path d="M8.2 7.2 10.8 16M15.8 7.2 13.2 16M8.2 6h7.6" stroke="#6366F1" stroke-width="1.6" stroke-linecap="round"/></svg>` },
+  fs_fe_testing: { label: "Tests Front-end", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2.2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/><path d="m8 12 2.2 2.2L16 8.5" stroke="#F59E0B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 16h10" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/></svg>` },
+  fs_be_api_design: { label: "API Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/><path d="M9 9h6M9 12h6M9 15h3" stroke="#06B6D4" stroke-width="1.7" stroke-linecap="round"/><path d="m15.2 14.8 2.5 2.5m0-2.5-2.5 2.5" stroke="#0E7490" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  fs_be_database: { label: "Base de données", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="12" cy="6.5" rx="6.5" ry="2.8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/><path d="M5.5 6.5v8c0 1.5 2.9 2.8 6.5 2.8s6.5-1.3 6.5-2.8v-8" stroke="#3B82F6" stroke-width="1.5"/><path d="M5.5 10.5c0 1.5 2.9 2.8 6.5 2.8s6.5-1.3 6.5-2.8" stroke="#60A5FA" stroke-width="1.4"/></svg>` },
+  fs_be_auth: { label: "Auth & Sessions", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2.2" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/><path d="M8 10V8.4a4 4 0 0 1 8 0V10" stroke="#8B5CF6" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="15" r="1.4" fill="#A78BFA"/></svg>` },
+  fs_be_security: { label: "Sécurité back-end", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 7 3v5.8c0 4.5-2.9 7.6-7 9.2-4.1-1.6-7-4.7-7-9.2V6l7-3Z" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/><path d="m9.2 12.4 1.8 1.8 3.8-3.8" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  fs_be_performance: { label: "Performance API", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 16a7 7 0 1 1 14 0" stroke="#F97316" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12 8.5 15.5" stroke="#EA580C" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="16" r="1.3" fill="#FB923C"/><path d="M7 18h10" stroke="#FDBA74" stroke-width="1.6" stroke-linecap="round"/></svg>` },
+  fs_devops_ci_cd: { label: "CI / CD", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.4" fill="#ECFCCB" stroke="#65A30D" stroke-width="1.5"/><path d="m8 12 2.3 2.3L16 8.6" stroke="#84CC16" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 16h10" stroke="#4D7C0F" stroke-width="1.5" stroke-linecap="round"/></svg>` },
+  fs_devops_docker: { label: "Docker & Containers", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="8" width="3" height="3" rx=".6" fill="#60A5FA"/><rect x="8.8" y="8" width="3" height="3" rx=".6" fill="#3B82F6"/><rect x="12.6" y="8" width="3" height="3" rx=".6" fill="#2563EB"/><rect x="8.8" y="11.8" width="3" height="3" rx=".6" fill="#93C5FD"/><rect x="12.6" y="11.8" width="3" height="3" rx=".6" fill="#60A5FA"/><path d="M3.8 14.7c0 2.7 2.1 4.6 5.7 4.6h4.6c3.8 0 6.1-2.2 6.1-5.5 1-.1 1.8-1 1.8-2.2-.8.3-1.5.2-2.1-.2-.5-.4-.7-.9-.8-1.4-.6 1.2-1.7 1.9-3.1 1.9H9.2c-3.3 0-5.4 1.4-5.4 2.8Z" fill="#1D4ED8"/></svg>` },
+  fs_devops_monitoring: { label: "Monitoring", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="14" rx="2.3" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/><path d="M6.5 14h2.3l1.7-3.8 2.2 5.6 1.8-3.1h3.1" stroke="#14B8A6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17.5" cy="19.2" r="1.3" fill="#0D9488"/></svg>` },
+  fs_qa_unit: { label: "Tests unitaires", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4h8v2.2l-2.6 3v7.1a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2V9.2L6.4 6.2V4Z" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/><path d="m9.8 12 1.8 1.8 2.6-2.6" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  fs_qa_e2e: { label: "Tests E2E", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="7.5" height="6.8" rx="1.5" fill="#FAE8FF" stroke="#A21CAF" stroke-width="1.5"/><rect x="13" y="12.2" width="7.5" height="6.8" rx="1.5" fill="#F5D0FE" stroke="#C026D3" stroke-width="1.5"/><path d="M10.5 8.4h3M13.5 8.4l-1.1-1.1M13.5 8.4l-1.1 1.1" stroke="#D946EF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  fs_qa_audit: { label: "Audit Qualité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4.5" width="11" height="15" rx="2" fill="#FEF9C3" stroke="#CA8A04" stroke-width="1.5"/><path d="M8 8.5h5M8 11.5h5M8 14.5h3" stroke="#EAB308" stroke-width="1.6" stroke-linecap="round"/><circle cx="17.8" cy="16.8" r="2.2" fill="#FDE68A" stroke="#A16207" stroke-width="1.4"/><path d="m19.3 18.3 1.8 1.8" stroke="#A16207" stroke-width="1.4" stroke-linecap="round"/></svg>` },
   design: { label: "Palette créative", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 3-1.1 3-2.5 0-.8-.4-1.5-1-2 .9-.2 1.8-.5 2.6-1 1.4-.8 2.4-2.2 2.4-3.9 0-4.7-3.8-8.6-8.6-8.6H12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.7" cy="10" r="1.1" fill="currentColor"/><circle cx="10.3" cy="7.2" r="1.1" fill="currentColor"/><circle cx="14.1" cy="7.5" r="1.1" fill="currentColor"/></svg>` },
   accounting: { label: "Comptabilité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19h14M7 16V8m5 8V5m5 11v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 5.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5M9 8.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>` },
   communication: { label: "Communication", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v9H8l-4 4V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m7 10 5 3 5-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
@@ -59,7 +75,15 @@ const BOARD_ICON_LIBRARY = {
 
 const BOARD_JOB_CATALOG = {
   general: { label: "Général", icons: ["none", "product", "strategy", "management"] },
-  fullstack: { label: "Développeur full stack", icons: ["it", "operations", "strategy", "product"] },
+  fullstack: {
+    label: "Développeur full stack",
+    sections: [
+      { id: "fs_fe", label: "Front-end", icons: ["fs_fe_ui_design", "fs_fe_ux_design", "fs_fe_accessibility", "fs_fe_state_management", "fs_fe_testing"] },
+      { id: "fs_be", label: "Back-end", icons: ["fs_be_api_design", "fs_be_database", "fs_be_auth", "fs_be_security", "fs_be_performance"] },
+      { id: "fs_devops", label: "DevOps", icons: ["fs_devops_ci_cd", "fs_devops_docker", "fs_devops_monitoring"] },
+      { id: "fs_qa", label: "Qualité & Tests", icons: ["fs_qa_unit", "fs_qa_e2e", "fs_qa_audit"] },
+    ],
+  },
   design: { label: "Design", icons: ["design", "product", "communication"] },
   accounting: { label: "Comptabilité", icons: ["accounting", "finance", "strategy"] },
   communication: { label: "Communication", icons: ["communication", "marketing", "management"] },
@@ -83,8 +107,29 @@ const BOARD_JOB_CATALOG = {
 const ICON_TO_JOB = (() => {
   const map = {};
   Object.entries(BOARD_JOB_CATALOG).forEach(([jobKey, job]) => {
-    (job.icons || []).forEach((iconKey) => {
+    const sections = Array.isArray(job.sections)
+      ? job.sections
+      : [{ id: "default", label: "Tous", icons: job.icons || [] }];
+    sections.forEach((section) => (section.icons || []).forEach((iconKey) => {
       if (!map[iconKey]) map[iconKey] = jobKey;
+    }));
+  });
+  return map;
+})();
+
+const ICON_TO_RUBRIC = (() => {
+  const map = {};
+  Object.entries(BOARD_JOB_CATALOG).forEach(([jobKey, job]) => {
+    const sections = Array.isArray(job.sections)
+      ? job.sections
+      : [{ id: "default", label: "Tous", icons: job.icons || [] }];
+    map[jobKey] = {};
+    sections.forEach((section) => {
+      (section.icons || []).forEach((iconKey) => {
+        if (!map[jobKey][iconKey]) {
+          map[jobKey][iconKey] = section.id;
+        }
+      });
     });
   });
   return map;
@@ -298,12 +343,39 @@ function populateBoardJobSelect() {
   });
 }
 
-function populateBoardIconSelect(jobKey, preferredIcon = "none") {
+function getJobSections(jobKey) {
+  const job = BOARD_JOB_CATALOG[jobKey] || BOARD_JOB_CATALOG.general;
+  if (Array.isArray(job.sections) && job.sections.length > 0) {
+    return job.sections;
+  }
+  return [{ id: "default", label: "Tous", icons: job.icons || ["none"] }];
+}
+
+function populateBoardRubricSelect(jobKey, preferredRubric = "default") {
+  const rubricSelect = document.getElementById("boardRubricSelect");
+  if (!rubricSelect) return "default";
+  const sections = getJobSections(jobKey);
+  rubricSelect.replaceChildren();
+  sections.forEach((section) => {
+    const option = document.createElement("option");
+    option.value = section.id;
+    option.textContent = section.label;
+    rubricSelect.appendChild(option);
+  });
+  const selected = sections.some((s) => s.id === preferredRubric)
+    ? preferredRubric
+    : sections[0]?.id || "default";
+  rubricSelect.value = selected;
+  return selected;
+}
+
+function populateBoardIconSelect(jobKey, rubricId, preferredIcon = "none") {
   const select = document.getElementById("boardIconSelect");
   if (!select) return;
+  const sections = getJobSections(jobKey);
+  const section = sections.find((s) => s.id === rubricId) || sections[0] || { icons: ["none"] };
+  const iconKeys = Array.from(new Set(section.icons || ["none"]));
   select.replaceChildren();
-  const job = BOARD_JOB_CATALOG[jobKey] || BOARD_JOB_CATALOG.general;
-  const iconKeys = Array.from(new Set(job.icons || ["none"]));
   iconKeys.forEach((key) => {
     const meta = BOARD_ICON_LIBRARY[key];
     if (!meta) return;
@@ -325,25 +397,38 @@ function renderBoardIconPreview(iconKey) {
 
 function syncBoardIconSelect(boardId) {
   const jobSelect = document.getElementById("boardJobSelect");
+  const rubricSelect = document.getElementById("boardRubricSelect");
   const select = document.getElementById("boardIconSelect");
-  if (!select || !jobSelect) return;
+  if (!select || !jobSelect || !rubricSelect) return;
   const iconKey = getBoardIconKey(boardId);
   const jobKey = ICON_TO_JOB[iconKey] || "general";
+  const rubricKey = ICON_TO_RUBRIC[jobKey]?.[iconKey] || "default";
   jobSelect.value = jobKey;
-  populateBoardIconSelect(jobKey, iconKey);
+  const selectedRubric = populateBoardRubricSelect(jobKey, rubricKey);
+  populateBoardIconSelect(jobKey, selectedRubric, iconKey);
   renderBoardIconPreview(select.value || "none");
 }
 
 function wireBoardIconPicker() {
   const jobSelect = document.getElementById("boardJobSelect");
+  const rubricSelect = document.getElementById("boardRubricSelect");
   const select = document.getElementById("boardIconSelect");
-  if (!select || !jobSelect) return;
+  if (!select || !jobSelect || !rubricSelect) return;
   populateBoardJobSelect();
-  populateBoardIconSelect("general", "none");
+  const initialRubric = populateBoardRubricSelect("general", "default");
+  populateBoardIconSelect("general", initialRubric, "none");
   renderBoardIconPreview("none");
   jobSelect.addEventListener("change", () => {
+    const selectedRubric = populateBoardRubricSelect(jobSelect.value, "default");
+    populateBoardIconSelect(jobSelect.value, selectedRubric, "none");
+    renderBoardIconPreview(select.value || "none");
+    if (!state.activeBoardId) return;
+    setBoardIconKey(state.activeBoardId, select.value || "none");
+    renderBoardSidebar(state.boards, state.activeBoardId);
+  });
+  rubricSelect.addEventListener("change", () => {
     const current = select.value || "none";
-    populateBoardIconSelect(jobSelect.value, current);
+    populateBoardIconSelect(jobSelect.value, rubricSelect.value, current);
     renderBoardIconPreview(select.value || "none");
     if (!state.activeBoardId) return;
     setBoardIconKey(state.activeBoardId, select.value || "none");

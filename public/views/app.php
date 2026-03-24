@@ -176,6 +176,8 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                     <div class="board-icon-picker">
                       <label class="tf-label board-icon-picker-label" for="boardJobSelect">Métier</label>
                       <select id="boardJobSelect" class="tf-select board-icon-select" aria-label="Choisir le métier du tableau"></select>
+                      <label class="tf-label board-icon-picker-label" for="boardRubricSelect">Rubrique métier</label>
+                      <select id="boardRubricSelect" class="tf-select board-icon-select" aria-label="Choisir la rubrique métier"></select>
                       <div class="board-icon-row">
                         <div class="board-icon-select-wrap">
                           <label class="tf-label board-icon-picker-label" for="boardIconSelect">Pictogramme associé</label>

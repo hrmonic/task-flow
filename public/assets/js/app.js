@@ -310,6 +310,67 @@ function renderBoardSidebar(boards, activeId) {
   });
 }
 
+async function createBoardByName(rawName) {
+  const name = (rawName || "").trim();
+  setBoardToolbarError("");
+  if (!name) {
+    setBoardToolbarError("Indiquez un nom de tableau.");
+    return false;
+  }
+
+  const select = document.getElementById("boardSelect");
+  if (!select) return false;
+
+  try {
+    const board = await apiFetch("/api/boards", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+    state.boards.push(board);
+    fillBoardSelect(select, state.boards);
+    select.value = board.id;
+    state.activeBoardId = board.id;
+    syncBoardEditorFromState();
+    renderBoardSidebar(state.boards, state.activeBoardId);
+    await loadBoard(board.id);
+    return true;
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Création du tableau impossible.";
+    setBoardToolbarError(message);
+    return false;
+  }
+}
+
+function wireSidebarBoardCreator() {
+  const input = document.getElementById("sidebarNewBoardName");
+  const btn = document.getElementById("sidebarCreateBoardBtn");
+  if (!input || !btn) return;
+
+  const submitCreate = async () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const created = await createBoardByName(input.value);
+    btn.disabled = false;
+    if (created) {
+      input.value = "";
+      input.focus();
+      closeMobileNav();
+    } else {
+      input.focus();
+    }
+  };
+
+  btn.addEventListener("click", () => {
+    submitCreate();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    submitCreate();
+  });
+}
+
 function setAuthError(targetId, message = "") {
   const node = document.getElementById(targetId);
   if (!node) return;
@@ -820,6 +881,7 @@ async function bootstrapBoard() {
 
   setAuthenticatedShell(true);
   refreshNavUser();
+  wireSidebarBoardCreator();
 
   logoutBtn.hidden = false;
   authSection.hidden = true;
@@ -934,33 +996,6 @@ async function bootstrapBoard() {
     }
   };
 
-  document.getElementById("createBoardBtn").onclick = async () => {
-    const name = document.getElementById("newBoardName").value.trim();
-    setBoardToolbarError("");
-    if (!name) {
-      setBoardToolbarError("Indiquez un nom de tableau.");
-      document.getElementById("newBoardName")?.focus();
-      return;
-    }
-    try {
-      const board = await apiFetch("/api/boards", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-      state.boards.push(board);
-      fillBoardSelect(select, state.boards);
-      select.value = board.id;
-      document.getElementById("newBoardName").value = "";
-      syncBoardEditorFromState();
-      state.activeBoardId = board.id;
-      renderBoardSidebar(state.boards, state.activeBoardId);
-      await loadBoard(board.id);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Création du tableau impossible.";
-      setBoardToolbarError(message);
-    }
-  };
 }
 
 document.getElementById("logoutBtn").onclick = () => {

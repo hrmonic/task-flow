@@ -124,7 +124,6 @@
   grid-template-areas:
     "active"
     "desc"
-    "new"
     "danger";
 }
 
@@ -132,7 +131,7 @@
   .toolbar-grid {
     grid-template-columns: 1.1fr 1fr;
     grid-template-areas:
-      "active new"
+      "active active"
       "desc desc"
       "danger .";
   }
@@ -140,10 +139,10 @@
 
 @media (min-width: 1200px) {
   .toolbar-grid {
-    grid-template-columns: 1fr 1.6fr auto;
+    grid-template-columns: 1fr 1.7fr auto;
     grid-template-areas:
       "active desc danger"
-      "new desc danger";
+      ". desc danger";
   }
 }
 
@@ -158,10 +157,6 @@
 
 .toolbar-field--desc {
   grid-area: desc;
-}
-
-.toolbar-field--new {
-  grid-area: new;
 }
 
 .toolbar-grid .tf-label {

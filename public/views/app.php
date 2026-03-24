@@ -132,12 +132,21 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
       <section id="boardSection" hidden aria-label="Tableaux Kanban">
         <div class="tf-board-head">
           <h2 class="tf-h2" style="font-size:1.25rem;margin:0 0 0.25rem">Tableau actif</h2>
-          <p class="tf-muted board-head-hint">Modifiez le tableau sélectionné ou créez-en un nouveau.</p>
+          <p class="tf-muted board-head-hint">Modifiez le tableau sélectionné.</p>
         </div>
 
         <div class="tf-board-layout">
           <aside id="boardSidebar" class="tf-board-sidebar" hidden aria-label="Liste des tableaux">
             <p class="tf-board-sidebar-title">Tableaux</p>
+            <div class="tf-board-create">
+              <label class="tf-sr-only" for="sidebarNewBoardName">Créer un nouveau tableau</label>
+              <div class="tf-board-create-row">
+                <input id="sidebarNewBoardName" type="text" class="tf-input tf-board-create-input" placeholder="Nouveau tableau..." autocomplete="off" maxlength="120" aria-label="Nom du nouveau tableau">
+                <button id="sidebarCreateBoardBtn" type="button" class="tf-board-create-btn" aria-label="Valider la création du tableau" title="Valider">
+                  <span aria-hidden="true">✓</span>
+                </button>
+              </div>
+            </div>
             <ul id="boardSidebarList" class="tf-board-list"></ul>
           </aside>
           <div class="tf-board-main">
@@ -157,13 +166,6 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                   <div class="tf-field toolbar-field--desc">
                     <label class="tf-label" for="boardDescInput">Description du tableau actif</label>
                     <textarea id="boardDescInput" class="tf-textarea" rows="3" maxlength="2000" placeholder="Objectifs, périmètre, liens, notes d'équipe..." aria-label="Description du tableau actif"></textarea>
-                  </div>
-                  <div class="tf-field toolbar-field--new">
-                    <label class="tf-label" for="newBoardName">Créer un nouveau tableau</label>
-                    <div class="tf-input-row">
-                      <input id="newBoardName" type="text" class="tf-input" placeholder="Ex. Backlog produit" autocomplete="off" maxlength="120" aria-label="Nom du nouveau tableau">
-                      <button id="createBoardBtn" type="button" class="tf-btn tf-btn--success">Créer</button>
-                    </div>
                   </div>
                   <div class="danger-zone-card tf-card toolbar-danger">
                     <div class="tf-card-body py-3">

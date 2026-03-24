@@ -482,6 +482,54 @@ h3,
   color: #3a3958;
 }
 
+.tf-board-create {
+  margin: 0 0.35rem 0.6rem;
+}
+
+.tf-board-create-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tf-board-create-input {
+  min-height: 2.1rem;
+  padding: 0.42rem 0.6rem;
+  font-size: 0.8125rem;
+}
+
+.tf-board-create-btn {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid color-mix(in srgb, var(--color-success) 52%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--color-success) 20%, var(--surface-card));
+  color: color-mix(in srgb, var(--color-success) 80%, #0f172a);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tf-board-create-btn:hover {
+  background: color-mix(in srgb, var(--color-success) 28%, var(--surface-card));
+  border-color: color-mix(in srgb, var(--color-success) 64%, transparent);
+}
+
+.tf-board-create-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tf-board-create-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .tf-board-list {
   list-style: none;
   margin: 0;

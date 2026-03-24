@@ -13,6 +13,7 @@ import { loadBoard, reloadActiveBoard } from "./kanban.js";
 
 const state = { boards: [], activeBoardId: null };
 const THEME_STORAGE_KEY = "taskflow_theme";
+const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
@@ -107,6 +108,17 @@ function getBoardSectionEl() {
   return document.getElementById("boardSection");
 }
 
+function getStoredAppView() {
+  const stored = localStorage.getItem(APP_VIEW_STORAGE_KEY);
+  return stored === "boards" ? "boards" : "dashboard";
+}
+
+function persistAppView(view) {
+  if (view === "dashboard" || view === "boards") {
+    localStorage.setItem(APP_VIEW_STORAGE_KEY, view);
+  }
+}
+
 /** @param {"dashboard" | "boards" | "auth"} view */
 function showAppView(view) {
   const dash = getDashboardEl();
@@ -123,12 +135,14 @@ function showAppView(view) {
     if (dash) dash.hidden = false;
     if (board) board.hidden = true;
     if (auth) auth.hidden = true;
+    persistAppView("dashboard");
     return;
   }
   if (view === "boards") {
     if (dash) dash.hidden = true;
     if (board) board.hidden = false;
     if (auth) auth.hidden = true;
+    persistAppView("boards");
   }
 }
 
@@ -810,7 +824,7 @@ async function bootstrapBoard() {
   logoutBtn.hidden = false;
   authSection.hidden = true;
   authSection.replaceChildren();
-  showAppView("dashboard");
+  showAppView(getStoredAppView());
 
   try {
     state.boards = await apiFetch("/api/boards");
@@ -950,6 +964,7 @@ async function bootstrapBoard() {
 }
 
 document.getElementById("logoutBtn").onclick = () => {
+  localStorage.removeItem(APP_VIEW_STORAGE_KEY);
   logout();
   setAuthenticatedShell(false);
   location.reload();
@@ -967,7 +982,7 @@ if (getToken()) {
   document.getElementById("authSection").hidden = true;
   document.getElementById("authSection").replaceChildren();
   setAuthenticatedShell(true);
-  showAppView("dashboard");
+  showAppView(getStoredAppView());
   refreshProfileFromApi()
     .catch(() => {})
     .finally(() => {

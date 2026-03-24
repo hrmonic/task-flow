@@ -318,6 +318,24 @@ h3,
   box-shadow: none;
 }
 
+.theme-toggle-label {
+  line-height: 1;
+}
+
+.theme-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+}
+
+.theme-toggle-svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
 /* ——— Champs ——— */
 .tf-label {
   display: block;

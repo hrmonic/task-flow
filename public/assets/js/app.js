@@ -35,12 +35,25 @@ function setThemeToggleState(theme) {
   const btn = document.getElementById("themeToggleBtn");
   if (!btn) return;
   const isLight = theme === "light";
+  const label = isLight ? "Activer le mode sombre" : "Activer le mode clair";
+  const icon = isLight
+    ? `<svg viewBox="0 0 24 24" fill="none" class="theme-toggle-svg" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.8A9 9 0 1 1 11.2 3c-.1.4-.2.9-.2 1.4a7 7 0 0 0 8.6 6.8c.5-.1 1-.3 1.4-.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" class="theme-toggle-svg" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5V5M12 19V21.5M21.5 12H19M5 12H2.5M18.4 5.6 16.7 7.3M7.3 16.7 5.6 18.4M18.4 18.4 16.7 16.7M7.3 7.3 5.6 5.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
   btn.setAttribute("aria-pressed", String(isLight));
   btn.setAttribute(
     "aria-label",
-    isLight ? "Activer le mode sombre" : "Activer le mode clair",
+    label,
   );
-  btn.textContent = isLight ? "Activer le mode sombre" : "Activer le mode clair";
+  const labelNode = btn.querySelector(".theme-toggle-label");
+  const iconNode = btn.querySelector(".theme-toggle-icon");
+  if (labelNode) {
+    labelNode.textContent = label;
+  } else {
+    btn.textContent = label;
+  }
+  if (iconNode) {
+    iconNode.innerHTML = icon;
+  }
 }
 
 function applyTheme(theme, persist = true) {

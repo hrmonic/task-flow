@@ -830,6 +830,33 @@
   transform: translateY(-1px);
 }
 
+/* PRIORITES : CONTRASTE RENFORCE */
+:root[data-theme="light"] .task-priority-pill--medium {
+  background: #ffe8a3 !important;
+  color: #7a5600 !important;
+  border-color: #d4a900 !important;
+}
+
+:root[data-theme="light"] .task-priority-pill--high {
+  background: #ffd2b3 !important;
+  color: #8f2f00 !important;
+  border-color: #e67e22 !important;
+}
+
+:root[data-theme="dark"] .task-priority-pill--medium,
+:root:not([data-theme]) .task-priority-pill--medium {
+  background: #5a4600 !important;
+  color: #ffd84a !important;
+  border-color: #d4a900 !important;
+}
+
+:root[data-theme="dark"] .task-priority-pill--high,
+:root:not([data-theme]) .task-priority-pill--high {
+  background: #5b2500 !important;
+  color: #ff9a52 !important;
+  border-color: #f97316 !important;
+}
+
 /* MODE LIGHT : ENTETE VIOLET + TEXTE BLANC */
 :root[data-theme="light"] .kanban-column .column-header {
   background: linear-gradient(135deg, #5b49e6 0%, #6d4bff 52%, #7a4fff 100%) !important;

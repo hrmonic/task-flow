@@ -200,6 +200,34 @@
   font-size: 0.84rem;
 }
 
+.board-icon-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.board-icon-select-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.board-icon-preview {
+  flex: 0 0 3.05rem;
+  min-height: 3.05rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.board-icon-preview svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .board-contributor-create {
   margin-top: 0.55rem;
 }
@@ -337,6 +365,16 @@
 }
 
 @media (max-width: 760px) {
+  .board-icon-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-icon-preview {
+    width: 100%;
+    min-height: 2.6rem;
+  }
+
   .toolbar-grid .tf-input-row {
     flex-wrap: wrap;
   }

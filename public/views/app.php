@@ -173,8 +173,15 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                       <button type="button" id="saveBoardBtn" class="tf-btn tf-btn--primary">Enregistrer</button>
                     </div>
                     <div class="board-icon-picker">
-                      <label class="tf-label board-icon-picker-label" for="boardIconSelect">Nature du tableau</label>
-                      <select id="boardIconSelect" class="tf-select board-icon-select" aria-label="Choisir la nature du tableau"></select>
+                      <label class="tf-label board-icon-picker-label" for="boardJobSelect">Métier</label>
+                      <select id="boardJobSelect" class="tf-select board-icon-select" aria-label="Choisir le métier du tableau"></select>
+                      <div class="board-icon-row">
+                        <div class="board-icon-select-wrap">
+                          <label class="tf-label board-icon-picker-label" for="boardIconSelect">Pictogramme associé</label>
+                          <select id="boardIconSelect" class="tf-select board-icon-select" aria-label="Choisir le pictogramme du tableau"></select>
+                        </div>
+                        <div id="boardIconPreview" class="board-icon-preview" aria-hidden="true"></div>
+                      </div>
                     </div>
                     <div class="board-contributor-create">
                       <label class="tf-label board-icon-picker-label" for="boardContributorInput">Ajouter un contributeur (email ou nom)</label>

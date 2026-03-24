@@ -39,7 +39,7 @@ const BOARD_DOT_PALETTE = [
 
 const BOARD_ICON_LIBRARY = {
   none: { label: "Aucun pictogramme", svg: "" },
-  design: { label: "Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 3-1.1 3-2.5 0-.8-.4-1.5-1-2 .9-.2 1.8-.5 2.6-1 1.4-.8 2.4-2.2 2.4-3.9 0-4.7-3.8-8.6-8.6-8.6H12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.7" cy="10" r="1.1" fill="currentColor"/><circle cx="10.3" cy="7.2" r="1.1" fill="currentColor"/><circle cx="14.1" cy="7.5" r="1.1" fill="currentColor"/></svg>` },
+  design: { label: "Palette créative", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 3-1.1 3-2.5 0-.8-.4-1.5-1-2 .9-.2 1.8-.5 2.6-1 1.4-.8 2.4-2.2 2.4-3.9 0-4.7-3.8-8.6-8.6-8.6H12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.7" cy="10" r="1.1" fill="currentColor"/><circle cx="10.3" cy="7.2" r="1.1" fill="currentColor"/><circle cx="14.1" cy="7.5" r="1.1" fill="currentColor"/></svg>` },
   accounting: { label: "Comptabilité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19h14M7 16V8m5 8V5m5 11v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 5.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5M9 8.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>` },
   communication: { label: "Communication", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v9H8l-4 4V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m7 10 5 3 5-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
   management: { label: "Management", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M6 20a6 6 0 0 1 12 0M4 13l2 2 3-3M20 13l-2 2-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
@@ -56,6 +56,39 @@ const BOARD_ICON_LIBRARY = {
   health: { label: "Santé", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20s-6.5-3.9-8.6-7.7C1.8 9.4 3.2 6 6.6 6c2.1 0 3.3 1.2 4.1 2.4.8-1.2 2-2.4 4.1-2.4 3.4 0 4.8 3.4 3.2 6.3C18.5 16.1 12 20 12 20Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
   logistics: { label: "Logistique", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h13v8H3zM16 10h3l2 2v3h-5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/></svg>` },
 };
+
+const BOARD_JOB_CATALOG = {
+  general: { label: "Général", icons: ["none", "product", "strategy", "management"] },
+  fullstack: { label: "Développeur full stack", icons: ["it", "operations", "strategy", "product"] },
+  design: { label: "Design", icons: ["design", "product", "communication"] },
+  accounting: { label: "Comptabilité", icons: ["accounting", "finance", "strategy"] },
+  communication: { label: "Communication", icons: ["communication", "marketing", "management"] },
+  management: { label: "Management", icons: ["management", "strategy", "hr"] },
+  strategy: { label: "Stratégie", icons: ["strategy", "management", "finance"] },
+  marketing: { label: "Marketing", icons: ["marketing", "communication", "sales"] },
+  product: { label: "Produit", icons: ["product", "strategy", "design"] },
+  hr: { label: "Ressources humaines", icons: ["hr", "management", "communication"] },
+  legal: { label: "Juridique", icons: ["legal", "strategy", "management"] },
+  operations: { label: "Opérations", icons: ["operations", "logistics", "management"] },
+  it: { label: "IT / Développement", icons: ["it", "operations", "product"] },
+  finance: { label: "Finance", icons: ["finance", "accounting", "strategy"] },
+  sales: { label: "Commercial", icons: ["sales", "marketing", "communication"] },
+  education: { label: "Éducation", icons: ["education", "communication", "management"] },
+  health: { label: "Santé", icons: ["health", "management", "operations"] },
+  logistics: { label: "Logistique", icons: ["logistics", "operations", "strategy"] },
+  audit: { label: "Audit", icons: ["finance", "strategy", "legal"] },
+  ux_accessibility: { label: "UX & Accessibilité", icons: ["design", "communication", "product"] },
+};
+
+const ICON_TO_JOB = (() => {
+  const map = {};
+  Object.entries(BOARD_JOB_CATALOG).forEach(([jobKey, job]) => {
+    (job.icons || []).forEach((iconKey) => {
+      if (!map[iconKey]) map[iconKey] = jobKey;
+    });
+  });
+  return map;
+})();
 
 function setThemeMetaColor(theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -253,11 +286,11 @@ function removeBoardIconKey(boardId) {
   setBoardIconMap(map);
 }
 
-function populateBoardIconSelect() {
-  const select = document.getElementById("boardIconSelect");
+function populateBoardJobSelect() {
+  const select = document.getElementById("boardJobSelect");
   if (!select) return;
   select.replaceChildren();
-  Object.entries(BOARD_ICON_LIBRARY).forEach(([key, meta]) => {
+  Object.entries(BOARD_JOB_CATALOG).forEach(([key, meta]) => {
     const option = document.createElement("option");
     option.value = key;
     option.textContent = meta.label;
@@ -265,20 +298,62 @@ function populateBoardIconSelect() {
   });
 }
 
-function syncBoardIconSelect(boardId) {
+function populateBoardIconSelect(jobKey, preferredIcon = "none") {
   const select = document.getElementById("boardIconSelect");
   if (!select) return;
-  select.value = getBoardIconKey(boardId);
+  select.replaceChildren();
+  const job = BOARD_JOB_CATALOG[jobKey] || BOARD_JOB_CATALOG.general;
+  const iconKeys = Array.from(new Set(job.icons || ["none"]));
+  iconKeys.forEach((key) => {
+    const meta = BOARD_ICON_LIBRARY[key];
+    if (!meta) return;
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = meta.label;
+    select.appendChild(option);
+  });
+  const exists = iconKeys.includes(preferredIcon);
+  select.value = exists ? preferredIcon : iconKeys[0] || "none";
+}
+
+function renderBoardIconPreview(iconKey) {
+  const preview = document.getElementById("boardIconPreview");
+  if (!preview) return;
+  const meta = BOARD_ICON_LIBRARY[iconKey] || BOARD_ICON_LIBRARY.none;
+  preview.innerHTML = meta.svg || "—";
+}
+
+function syncBoardIconSelect(boardId) {
+  const jobSelect = document.getElementById("boardJobSelect");
+  const select = document.getElementById("boardIconSelect");
+  if (!select || !jobSelect) return;
+  const iconKey = getBoardIconKey(boardId);
+  const jobKey = ICON_TO_JOB[iconKey] || "general";
+  jobSelect.value = jobKey;
+  populateBoardIconSelect(jobKey, iconKey);
+  renderBoardIconPreview(select.value || "none");
 }
 
 function wireBoardIconPicker() {
+  const jobSelect = document.getElementById("boardJobSelect");
   const select = document.getElementById("boardIconSelect");
-  if (!select) return;
-  populateBoardIconSelect();
+  if (!select || !jobSelect) return;
+  populateBoardJobSelect();
+  populateBoardIconSelect("general", "none");
+  renderBoardIconPreview("none");
+  jobSelect.addEventListener("change", () => {
+    const current = select.value || "none";
+    populateBoardIconSelect(jobSelect.value, current);
+    renderBoardIconPreview(select.value || "none");
+    if (!state.activeBoardId) return;
+    setBoardIconKey(state.activeBoardId, select.value || "none");
+    renderBoardSidebar(state.boards, state.activeBoardId);
+  });
   select.addEventListener("change", () => {
     if (!state.activeBoardId) return;
     setBoardIconKey(state.activeBoardId, select.value);
     renderBoardSidebar(state.boards, state.activeBoardId);
+    renderBoardIconPreview(select.value || "none");
   });
 }
 

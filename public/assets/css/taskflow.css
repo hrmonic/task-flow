@@ -126,6 +126,10 @@
   gap: 0.35rem;
 }
 
+.board-head-secondary-action {
+  margin-top: 0.45rem;
+}
+
 .board-toolbar-body {
   padding: 1.15rem 1.2rem 1.05rem;
 }
@@ -305,6 +309,14 @@
 
 .board-activity-panel {
   margin-bottom: 0.7rem;
+}
+
+.board-activity-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .board-activity-list {

@@ -189,7 +189,7 @@ main#main-content:focus-visible {
 /* ——— Dashboard ——— */
 .dashboard-hero {
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.5) 100%);
+  background: var(--hero-bg);
 }
 
 /* ——— Board toolbar ——— */
@@ -203,7 +203,7 @@ main#main-content:focus-visible {
   border-radius: var(--radius-md);
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
-  color: #fecaca;
+  color: var(--danger-text);
   font-size: 0.875rem;
 }
 
@@ -212,8 +212,8 @@ main#main-content:focus-visible {
 }
 
 .danger-zone-card {
-  border-color: rgba(248, 113, 113, 0.35);
-  background: rgba(127, 29, 29, 0.12);
+  border-color: var(--danger-soft-border);
+  background: var(--danger-soft-bg);
 }
 
 /* Styles Kanban détaillés : voir kanban.css */
@@ -236,7 +236,7 @@ main#main-content:focus-visible {
 .tf-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2, 6, 23, 0.72);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(6px);
 }
 
@@ -376,7 +376,7 @@ main#main-content:focus-visible {
   border-radius: var(--radius-sm);
   background: rgba(22, 163, 74, 0.2);
   border: 1px solid rgba(74, 222, 128, 0.35);
-  color: #bbf7d0;
+  color: color-mix(in srgb, var(--color-success) 70%, #ffffff);
   font-size: 0.8125rem;
 }
 
@@ -487,7 +487,7 @@ main#main-content:focus-visible {
   flex-shrink: 0;
   margin-top: auto;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 22, 0.92);
+  background: var(--footer-bg);
 }
 
 .site-footer-tagline {

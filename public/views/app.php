@@ -78,6 +78,7 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
           </li>
         </ul>
         <div class="tf-nav-user">
+          <button type="button" id="themeToggleBtn" class="tf-btn tf-btn--ghost tf-btn--sm" aria-pressed="false" aria-label="Activer le mode clair">Activer le mode clair</button>
           <span id="navUserLabel" class="tf-nav-user-label" hidden></span>
           <button type="button" id="logoutBtn" class="tf-btn tf-btn--ghost tf-btn--sm" hidden>Déconnexion</button>
         </div>

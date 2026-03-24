@@ -3,6 +3,7 @@
  * Noms historiques conservés pour compatibilité kanban / modales.
  */
 :root {
+  color-scheme: dark;
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
@@ -47,4 +48,76 @@
   --priority-urgent: #ef4444;
 
   --auth-card-bg: linear-gradient(165deg, rgba(28, 29, 39, 0.85), rgba(13, 14, 20, 0.75));
+
+  --header-bg: rgba(8, 9, 14, 0.92);
+  --footer-bg: rgba(8, 12, 22, 0.92);
+  --overlay-backdrop: rgba(2, 6, 23, 0.72);
+  --hero-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.5) 100%);
+  --danger-text: #fecaca;
+  --danger-soft-bg: rgba(127, 29, 29, 0.12);
+  --danger-soft-border: rgba(248, 113, 113, 0.35);
+
+  --kanban-column-bg: linear-gradient(180deg, rgba(19, 20, 28, 0.98), rgba(12, 13, 19, 0.98));
+  --kanban-column-header-bg: linear-gradient(180deg, rgba(20, 21, 31, 0.98), rgba(20, 21, 31, 0.9));
+  --kanban-card-bg: linear-gradient(180deg, rgba(30, 31, 43, 0.98), rgba(23, 24, 34, 0.98));
+  --kanban-add-bg: rgba(19, 20, 28, 0.45);
+  --kanban-task-shadow: 0 10px 24px rgba(8, 11, 22, 0.35);
+  --kanban-task-hover-shadow: 0 14px 28px rgba(12, 16, 32, 0.42);
+  --kanban-soft-bg: rgba(255, 255, 255, 0.02);
+  --kanban-soft-bg-hover: rgba(255, 255, 255, 0.06);
+  --kanban-priority-pill-text: #d9dcf7;
+  --kanban-count-text: #e8eafc;
+  --kanban-priority-none: #4b4e68;
+  --kanban-muted-text: #5c5b7a;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --text: #1d2433;
+  --text-muted: #54607a;
+  --muted-readable: #3f4a63;
+
+  --surface-deep: #eef2fb;
+  --surface-void: #e6ecf9;
+  --surface-raised: #ffffff;
+  --surface-card: #f7faff;
+  --surface-column: #f9fbff;
+
+  --border-subtle: rgba(37, 54, 88, 0.12);
+  --border-strong: rgba(37, 54, 88, 0.2);
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-strong: rgba(79, 70, 229, 0.2);
+  --accent-indigo: rgba(79, 70, 229, 0.35);
+  --accent-glow: rgba(79, 70, 229, 0.12);
+
+  --shadow-card: 0 8px 30px rgba(73, 87, 128, 0.14);
+  --shadow-elevated: 0 10px 34px rgba(73, 87, 128, 0.18);
+
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.28);
+  --danger-text: #991b1b;
+  --danger-soft-bg: rgba(239, 68, 68, 0.08);
+  --danger-soft-border: rgba(239, 68, 68, 0.25);
+
+  --auth-card-bg: linear-gradient(165deg, rgba(255, 255, 255, 0.94), rgba(236, 242, 255, 0.95));
+  --header-bg: rgba(243, 246, 255, 0.94);
+  --footer-bg: rgba(236, 242, 255, 0.95);
+  --overlay-backdrop: rgba(33, 51, 89, 0.3);
+  --hero-bg: linear-gradient(135deg, rgba(226, 236, 255, 0.95) 0%, rgba(241, 246, 255, 0.95) 100%);
+
+  --kanban-column-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98));
+  --kanban-column-header-bg: linear-gradient(180deg, rgba(247, 250, 255, 0.98), rgba(241, 246, 255, 0.95));
+  --kanban-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
+  --kanban-add-bg: rgba(226, 236, 255, 0.55);
+  --kanban-task-shadow: 0 8px 18px rgba(102, 123, 167, 0.2);
+  --kanban-task-hover-shadow: 0 12px 26px rgba(102, 123, 167, 0.24);
+  --kanban-soft-bg: rgba(79, 70, 229, 0.08);
+  --kanban-soft-bg-hover: rgba(79, 70, 229, 0.14);
+  --kanban-priority-pill-text: #25335c;
+  --kanban-count-text: #1e2a4c;
+  --kanban-priority-none: #94a3b8;
+  --kanban-muted-text: #55617a;
 }

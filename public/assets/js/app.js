@@ -12,6 +12,7 @@ import { popMoveSnapshot } from "./boardHistory.js";
 import { loadBoard, reloadActiveBoard } from "./kanban.js";
 
 const state = { boards: [], activeBoardId: null };
+const THEME_STORAGE_KEY = "taskflow_theme";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
@@ -23,6 +24,55 @@ const BOARD_DOT_PALETTE = [
   "#10b981",
   "#f97316",
 ];
+
+function setThemeMetaColor(theme) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  meta.setAttribute("content", theme === "light" ? "#f3f6ff" : "#0d0e14");
+}
+
+function setThemeToggleState(theme) {
+  const btn = document.getElementById("themeToggleBtn");
+  if (!btn) return;
+  const isLight = theme === "light";
+  btn.setAttribute("aria-pressed", String(isLight));
+  btn.setAttribute(
+    "aria-label",
+    isLight ? "Activer le mode sombre" : "Activer le mode clair",
+  );
+  btn.textContent = isLight ? "Activer le mode sombre" : "Activer le mode clair";
+}
+
+function applyTheme(theme, persist = true) {
+  const nextTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nextTheme);
+  setThemeMetaColor(nextTheme);
+  setThemeToggleState(nextTheme);
+  if (persist) {
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  }
+}
+
+function initTheme() {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === "light" || stored === "dark") {
+    applyTheme(stored, false);
+    return;
+  }
+  const prefersLight = window.matchMedia?.("(prefers-color-scheme: light)")?.matches;
+  applyTheme(prefersLight ? "light" : "dark", false);
+}
+
+function wireThemeToggle() {
+  const btn = document.getElementById("themeToggleBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") === "light"
+      ? "light"
+      : "dark";
+    applyTheme(current === "light" ? "dark" : "light");
+  });
+}
 
 function boardAccent(id) {
   let h = 0;
@@ -896,6 +946,8 @@ wireMobileNav();
 wireShellNavigation();
 wireAccountModal();
 wireGlobalShortcuts();
+initTheme();
+wireThemeToggle();
 
 if (getToken()) {
   document.getElementById("logoutBtn").hidden = false;

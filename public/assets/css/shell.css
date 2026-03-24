@@ -54,7 +54,7 @@ h3,
   z-index: 100;
   flex-shrink: 0;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 9, 14, 0.92);
+  background: var(--header-bg);
   backdrop-filter: blur(10px);
 }
 
@@ -194,7 +194,7 @@ h3,
 .tf-nav-links a:hover,
 .tf-nav-links button:hover {
   color: var(--text);
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--kanban-soft-bg);
 }
 
 .tf-nav-user {
@@ -241,7 +241,7 @@ h3,
 }
 
 .tf-btn:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-card);
 }
 
@@ -279,17 +279,17 @@ h3,
 
 .tf-btn--ghost:hover {
   color: var(--text);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--kanban-soft-bg);
 }
 
 .tf-btn--danger {
   background: transparent;
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #fecaca;
+  border-color: var(--danger-border);
+  color: var(--danger-text);
 }
 
 .tf-btn--danger:hover {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--danger-bg);
 }
 
 .tf-btn--sm {
@@ -500,7 +500,7 @@ h3,
 
 .tf-board-item:hover {
   color: var(--text);
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--kanban-soft-bg);
 }
 
 .tf-board-item.is-active {
@@ -559,7 +559,7 @@ h3,
 .tf-palette-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(2, 6, 23, 0.72);
+  background: var(--overlay-backdrop);
   backdrop-filter: blur(6px);
 }
 
@@ -628,7 +628,7 @@ h3,
 
 .tf-palette-item:hover,
 .tf-palette-item.is-active {
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--kanban-soft-bg-hover);
 }
 
 .tf-shortcut-list p {
@@ -674,8 +674,8 @@ h3,
 }
 
 .tf-toast--error {
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #fecaca;
+  border-color: var(--danger-border);
+  color: var(--danger-text);
 }
 
 @keyframes tf-toast-in {

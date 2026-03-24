@@ -63,6 +63,7 @@ function wireTaskCard(taskEl, task) {
   const openEditor = () => {
     openTaskModal({
       task,
+      // MODIFIER LA CARTE
       onSave: async (payload) => {
         await apiFetch(`/api/tasks/${task.id}`, {
           method: "PATCH",
@@ -70,6 +71,7 @@ function wireTaskCard(taskEl, task) {
         });
         await reloadActiveBoard();
       },
+      // SUPPRIMER LA CARTE
       onDelete: async (taskId) => {
         await apiFetch(`/api/tasks/${taskId}`, { method: "DELETE" });
         await reloadActiveBoard();
@@ -239,7 +241,7 @@ export function renderBoard(columns) {
   }
 }
 
-/** Insère la carte au bon index selon la position verticale du pointeur. */
+/** AJOUTER LA CARTE */
 function insertTaskCardAtPointer(zone, card, clientY) {
   const siblings = [...zone.querySelectorAll(".task")].filter((el) => el !== card);
   let insertBefore = null;
@@ -280,6 +282,7 @@ function dataColumnSections(board) {
   return [...board.querySelectorAll(".kanban-column:not(.kanban-column--add)")];
 }
 
+/** DEPLACER LA COLONNE */
 function insertColumnAtPointer(board, dragged, clientX) {
   const siblings = dataColumnSections(board).filter((el) => el !== dragged);
   let insertBefore = null;
@@ -370,6 +373,7 @@ export function initDragAndDrop() {
   }
 
   board.querySelectorAll(".column-drag-handle").forEach((handle) => {
+    // DEPLACER LA COLONNE
     handle.addEventListener("dragstart", (e) => {
       const section = handle.closest(".kanban-column");
       if (!section) {
@@ -455,6 +459,7 @@ export function initDragAndDrop() {
       insertColumnAtPointer(board, draggingColumnSection, e.clientX);
       const position = columnDropPosition1Based(board, draggingColumnSection);
       try {
+        // DEPLACER LA COLONNE
         await apiFetch(`/api/columns/${currentColumnId}/move`, {
           method: "PATCH",
           body: JSON.stringify({ position }),
@@ -483,6 +488,7 @@ export function initDragAndDrop() {
     const srcCol = dragTaskSourceColumnId;
     const srcPos = dragTaskSourcePosition;
     try {
+      // DEPLACER LA CARTE
       await apiFetch(`/api/tasks/${currentTaskId}/move`, {
         method: "PATCH",
         body: JSON.stringify({

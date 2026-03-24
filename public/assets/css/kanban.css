@@ -964,3 +964,37 @@
   opacity: 0.82;
 }
 
+/* NOUVELLE COLONNE : DESIGN PREMIUM */
+.kanban-column--add {
+  justify-content: flex-start !important;
+  border-style: solid !important;
+  border-color: var(--border-subtle) !important;
+  background:
+    radial-gradient(120% 70% at 15% 0%, rgba(79, 70, 229, 0.12), transparent 45%),
+    radial-gradient(120% 70% at 85% 100%, rgba(124, 58, 237, 0.12), transparent 52%),
+    var(--surface-raised) !important;
+}
+
+.kanban-column--add::before {
+  opacity: 0.65 !important;
+}
+
+.kanban-column--add .add-column-btn {
+  margin-top: 1.2rem !important;
+  border: 1px solid rgba(99, 102, 241, 0.34) !important;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.22) !important;
+}
+
+.kanban-column--add .add-column-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.3) !important;
+}
+
+:root[data-theme="light"] .kanban-column--add {
+  background:
+    radial-gradient(120% 70% at 15% 0%, rgba(91, 73, 230, 0.11), transparent 45%),
+    radial-gradient(120% 70% at 85% 100%, rgba(122, 79, 255, 0.1), transparent 52%),
+    #ffffff !important;
+  border-color: rgba(78, 70, 229, 0.2) !important;
+}
+

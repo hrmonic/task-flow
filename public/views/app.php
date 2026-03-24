@@ -95,32 +95,35 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
   <main id="main-content" class="app-main" tabindex="-1">
     <div class="tf-container">
 
-      <section id="dashboardSection" class="mb-4" hidden aria-label="Tableau de bord">
+      <section id="dashboardSection" class="tf-dashboard mb-4" hidden aria-label="Tableau de bord">
         <div class="dashboard-hero tf-card tf-card-body mb-4">
-          <p class="auth-kicker mb-2">Espace connecté</p>
-          <h1 class="tf-h1 mb-2" style="font-size:clamp(1.35rem, 3vw, 1.85rem)">Bon retour sur TaskFlow</h1>
-          <p class="tf-muted mb-0 col-about">
-            Gérez vos colonnes et tâches en Kanban, synchronisées via l’API. Raccourcis : <kbd class="tf-kbd">N</kbd> nouvelle tâche (colonne focus), <kbd class="tf-kbd">C</kbd> colonne, <kbd class="tf-kbd">Ctrl+K</kbd> commandes, <kbd class="tf-kbd">?</kbd> aide, <kbd class="tf-kbd">Échap</kbd> fermer, <kbd class="tf-kbd">Ctrl+Z</kbd> annuler déplacement.
-          </p>
+          <div class="tf-dashboard-hero-row">
+            <div>
+              <p class="auth-kicker mb-2">Espace connecté</p>
+              <h1 class="tf-h1 mb-2 tf-dashboard-title">Bon retour sur TaskFlow</h1>
+              <p class="tf-muted mb-0 col-about tf-dashboard-hero-lead">
+                Vue d’ensemble de vos projets : priorités, échéances et accès rapide aux tableaux.
+              </p>
+            </div>
+            <div class="tf-dashboard-hero-actions">
+              <button type="button" class="tf-btn tf-btn--primary" data-nav-target="boards">Ouvrir les tableaux</button>
+              <button type="button" class="tf-btn tf-btn--ghost" id="openAccountFromDashboard">Mon compte</button>
+            </div>
+          </div>
         </div>
+
+        <div id="dashboardSummary" class="tf-dashboard-summary mb-4" aria-live="polite" aria-busy="false"></div>
+        <div id="dashboardBoards" class="tf-dashboard-boards" aria-live="polite"></div>
+
+        <p class="tf-muted tf-dashboard-footnote mb-4">
+          Les cases <strong>Terminées</strong> sur les cartes sont mémorisées sur cet appareil ; les totaux serveur comptent toutes les tâches. Raccourcis :
+          <kbd class="tf-kbd">Ctrl+K</kbd> commandes · <kbd class="tf-kbd">?</kbd> aide
+        </p>
+
         <div class="tf-grid tf-grid--dash">
           <div class="tf-card">
             <div class="tf-card-body">
-              <h2 class="tf-h3" style="font-size:1.1rem">Tableaux Kanban</h2>
-              <p class="tf-muted">Sélectionnez un tableau, éditez les colonnes et faites glisser les cartes.</p>
-              <button type="button" class="tf-btn tf-btn--primary" data-nav-target="boards">Ouvrir les tableaux</button>
-            </div>
-          </div>
-          <div class="tf-card">
-            <div class="tf-card-body">
-              <h2 class="tf-h3" style="font-size:1.1rem">Mon compte</h2>
-              <p class="tf-muted">Consultez votre profil ou changez votre mot de passe en sécurité.</p>
-              <button type="button" class="tf-btn tf-btn--ghost" id="openAccountFromDashboard">Voir le compte</button>
-            </div>
-          </div>
-          <div class="tf-card">
-            <div class="tf-card-body">
-              <h2 class="tf-h3" style="font-size:1.1rem">À propos</h2>
+              <h2 class="tf-h3 tf-dashboard-card-title">À propos</h2>
               <p class="tf-muted">Stack technique et mentions du projet TaskFlow.</p>
               <a href="#aboutSection" class="tf-btn tf-btn--ghost" data-nav-target="about">Lire la présentation</a>
             </div>
@@ -178,11 +181,9 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
                       <select id="boardJobSelect" class="tf-select board-icon-select" aria-label="Choisir le métier du tableau"></select>
                       <label class="tf-label board-icon-picker-label" for="boardRubricSelect">Rubrique métier</label>
                       <select id="boardRubricSelect" class="tf-select board-icon-select" aria-label="Choisir la rubrique métier"></select>
-                      <div class="board-icon-row">
-                        <div class="board-icon-select-wrap">
-                          <label class="tf-label board-icon-picker-label" for="boardIconSelect">Pictogramme associé</label>
-                          <select id="boardIconSelect" class="tf-select board-icon-select" aria-label="Choisir le pictogramme du tableau"></select>
-                        </div>
+                      <label class="tf-label board-icon-picker-label" for="boardIconSelect">Pictogramme associé</label>
+                      <div class="board-icon-inline">
+                        <select id="boardIconSelect" class="tf-select board-icon-select board-icon-select--grow" aria-label="Choisir le pictogramme du tableau"></select>
                         <div id="boardIconPreview" class="board-icon-preview" aria-hidden="true"></div>
                       </div>
                     </div>

@@ -155,4 +155,91 @@ final class TaskRepository
         $value = $stmt->fetchColumn();
         return $value === false ? null : (string) $value;
     }
+
+    /**
+     * Agrégats de tâches par tableau (boards déjà filtrés côté appelant).
+     *
+     * @param list<string> $boardIds
+     * @return array<string, array<string, int|string>>
+     */
+    public function aggregateByBoardIds(array $boardIds): array
+    {
+        if ($boardIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($boardIds), '?'));
+        $sql = "SELECT b.id AS board_id,
+            COUNT(t.id) AS tasks_total,
+            COALESCE(SUM(CASE WHEN t.priority = 'urgent' THEN 1 ELSE 0 END), 0) AS urgent,
+            COALESCE(SUM(CASE WHEN t.priority = 'high' THEN 1 ELSE 0 END), 0) AS high_pri,
+            COALESCE(SUM(CASE WHEN t.priority = 'medium' THEN 1 ELSE 0 END), 0) AS medium_pri,
+            COALESCE(SUM(CASE WHEN t.priority = 'low' THEN 1 ELSE 0 END), 0) AS low_pri,
+            COALESCE(SUM(CASE WHEN t.due_date IS NOT NULL AND t.due_date < CURDATE() THEN 1 ELSE 0 END), 0) AS overdue,
+            COALESCE(SUM(CASE WHEN t.due_date IS NOT NULL AND t.due_date >= CURDATE()
+                AND t.due_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END), 0) AS due_week
+            FROM boards b
+            LEFT JOIN columns c ON c.board_id = b.id
+            LEFT JOIN tasks t ON t.column_id = c.id
+            WHERE b.id IN ($placeholders)
+            GROUP BY b.id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(array_values($boardIds));
+        $out = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $bid = (string) $row['board_id'];
+            $out[$bid] = $row;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Jusqu'à N tâches « chaudes » par tableau (priorité + échéance).
+     *
+     * @param list<string> $boardIds
+     * @return list<array{id: string, title: string, priority: string, due_date: ?string, board_id: string, column_name: string}>
+     */
+    public function hotTasksByBoardIds(array $boardIds, int $perBoard = 5): array
+    {
+        if ($boardIds === [] || $perBoard < 1) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($boardIds), '?'));
+        $sql = "SELECT id, title, priority, due_date, board_id, column_name FROM (
+            SELECT t.id, t.title, t.priority, t.due_date, c.board_id, c.name AS column_name,
+                ROW_NUMBER() OVER (
+                    PARTITION BY c.board_id
+                    ORDER BY
+                        CASE t.priority
+                            WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END ASC,
+                        CASE WHEN t.due_date IS NOT NULL AND t.due_date < CURDATE() THEN 0 ELSE 1 END ASC,
+                        CASE WHEN t.due_date IS NULL THEN 1 ELSE 0 END ASC,
+                        t.due_date ASC
+                ) AS rk
+            FROM tasks t
+            INNER JOIN columns c ON c.id = t.column_id
+            WHERE c.board_id IN ($placeholders)
+        ) ranked WHERE rk <= ?
+        ORDER BY board_id, rk";
+        $stmt = $this->pdo->prepare($sql);
+        $p = 1;
+        foreach ($boardIds as $id) {
+            $stmt->bindValue($p, $id, PDO::PARAM_STR);
+            ++$p;
+        }
+        $stmt->bindValue($p, $perBoard, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return array_map(static function (array $r): array {
+            return [
+                'id' => (string) $r['id'],
+                'title' => (string) $r['title'],
+                'priority' => (string) $r['priority'],
+                'due_date' => $r['due_date'] !== null && $r['due_date'] !== '' ? (string) $r['due_date'] : null,
+                'board_id' => (string) $r['board_id'],
+                'column_name' => (string) $r['column_name'],
+            ];
+        }, $rows);
+    }
 }

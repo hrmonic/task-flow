@@ -78,7 +78,7 @@ function setBoardCacheMap(map) {
   localStorage.setItem(BOARD_CACHE_STORAGE_KEY, JSON.stringify(map));
 }
 
-function getBoardCache(boardId) {
+export function getBoardCache(boardId) {
   const map = getBoardCacheMap();
   const entry = map[boardId];
   if (!entry || !Array.isArray(entry.columns)) return null;
@@ -107,7 +107,7 @@ async function fetchBoardData(boardId) {
   return withTasks;
 }
 
-function getTaskDoneMap() {
+export function getTaskDoneMap() {
   try {
     const raw = localStorage.getItem(TASK_DONE_STORAGE_KEY);
     if (!raw) return {};

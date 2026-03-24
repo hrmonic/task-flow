@@ -204,32 +204,36 @@
   font-size: 0.84rem;
 }
 
-.board-icon-row {
+.board-icon-select--grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Prévisualisation du picto : même ligne et même hauteur que le select « Pictogramme associé » */
+.board-icon-inline {
   display: flex;
   align-items: stretch;
   gap: 0.55rem;
 }
 
-.board-icon-select-wrap {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
 .board-icon-preview {
-  flex: 0 0 3.05rem;
-  min-height: 3.05rem;
+  box-sizing: border-box;
+  flex: 0 0 2.6rem;
+  width: 2.6rem;
+  min-width: 2.6rem;
+  min-height: 0;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface-card);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent);
 }
 
 .board-icon-preview svg {
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .board-contributor-create {
@@ -377,14 +381,12 @@
 }
 
 @media (max-width: 760px) {
-  .board-icon-row {
-    flex-direction: column;
-    align-items: stretch;
+  .board-icon-inline {
+    flex-wrap: wrap;
   }
 
-  .board-icon-preview {
-    width: 100%;
-    min-height: 2.6rem;
+  .board-icon-inline .board-icon-preview {
+    flex: 0 0 2.6rem;
   }
 
   .toolbar-grid .tf-input-row {
@@ -447,6 +449,247 @@ main#main-content:focus-visible {
 .dashboard-hero {
   border: 1px solid var(--border-subtle);
   background: var(--hero-bg);
+}
+
+.tf-dashboard-hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tf-dashboard-title {
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+}
+
+.tf-dashboard-hero-lead {
+  max-width: 42rem;
+}
+
+.tf-dashboard-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tf-dashboard-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.tf-dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.tf-dashboard-stat {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.85rem;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+}
+
+.tf-dashboard-stat--warn {
+  border-color: color-mix(in srgb, var(--priority-high) 35%, var(--border-subtle));
+}
+
+.tf-dashboard-stat--danger {
+  border-color: color-mix(in srgb, var(--priority-urgent) 40%, var(--border-subtle));
+}
+
+.tf-dashboard-stat-value {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.tf-dashboard-stat-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.tf-dashboard-board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+  gap: 1rem;
+}
+
+.tf-dashboard-board-card--alert {
+  border-color: color-mix(in srgb, var(--priority-urgent) 28%, var(--border-subtle));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--priority-urgent) 12%, transparent);
+}
+
+.tf-dashboard-board-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.tf-dashboard-board-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tf-dashboard-board-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.tf-dashboard-board-dot {
+  flex-shrink: 0;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+}
+
+.tf-dashboard-board-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tf-dashboard-board-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.tf-dashboard-board-role {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+}
+
+.tf-dashboard-open-board {
+  flex-shrink: 0;
+}
+
+.tf-dashboard-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.tf-dashboard-metric-val {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tf-dashboard-metric-val--urgent {
+  color: var(--priority-urgent);
+}
+
+.tf-dashboard-metric-val--danger {
+  color: var(--danger-text);
+}
+
+.tf-dashboard-local {
+  font-size: 0.78rem;
+  margin: 0 0 0.65rem;
+}
+
+.tf-dashboard-hot-block {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.65rem;
+}
+
+.tf-dashboard-hot-heading {
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.tf-dashboard-hot-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.tf-dashboard-hot-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.tf-dashboard-hot-item .task-priority-pill {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  padding: 0.12rem 0.35rem;
+}
+
+.tf-dashboard-hot-title {
+  flex: 1 1 8rem;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tf-dashboard-hot-meta {
+  flex: 1 1 100%;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.tf-dashboard-hot-due {
+  font-weight: 600;
+  color: var(--muted-readable);
+}
+
+.tf-dashboard-hot-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.tf-dashboard-footnote {
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.tf-dashboard-card-title {
+  font-size: 1.1rem;
+}
+
+.tf-dashboard-loading {
+  margin: 0;
+}
+
+.tf-dashboard-error .tf-btn {
+  margin-left: 0.5rem;
+  vertical-align: middle;
 }
 
 /* ——— Board toolbar ——— */

@@ -129,6 +129,7 @@ $router->get('/api/auth/me', fn(array $params) => $auth->run(fn(string $userId) 
 $router->patch('/api/auth/password', fn(array $params) => $auth->run(fn(string $userId) => $authController->changePassword($userId, $params)));
 
 $router->get('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->index($userId, $params)));
+$router->get('/api/dashboard', fn(array $params) => $auth->run(fn(string $userId) => $boardController->dashboard($userId, $params)));
 $router->post('/api/boards', fn(array $params) => $auth->run(fn(string $userId) => $boardController->create($userId, $params)));
 $router->patch('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->update($userId, $params)));
 $router->delete('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->delete($userId, $params)));

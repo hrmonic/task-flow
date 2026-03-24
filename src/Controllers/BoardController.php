@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Repositories\BoardRepository;
 use App\Repositories\BoardInvitationRepository;
 use App\Repositories\TaskActivityRepository;
+use App\Repositories\TaskRepository;
 use App\Repositories\UserRepository;
 use App\Services\InvitationMailerService;
 use App\Services\ResponseService;
@@ -32,6 +33,79 @@ final class BoardController
     public function index(string $userId, array $payload): void
     {
         ResponseService::json(true, $this->boards->findByUser($userId), null);
+    }
+
+    public function dashboard(string $userId, array $payload): void
+    {
+        $boards = $this->boards->findByUser($userId);
+        $ids = array_map(static fn (array $b): string => (string) $b['id'], $boards);
+        $tasksRepo = new TaskRepository();
+        $aggByBoard = $tasksRepo->aggregateByBoardIds($ids);
+        $hotRows = $tasksRepo->hotTasksByBoardIds($ids, 5);
+        $hotByBoard = [];
+        foreach ($hotRows as $row) {
+            $bid = $row['board_id'];
+            if (!isset($hotByBoard[$bid])) {
+                $hotByBoard[$bid] = [];
+            }
+            $hotByBoard[$bid][] = [
+                'id' => $row['id'],
+                'title' => $row['title'],
+                'priority' => $row['priority'],
+                'due_date' => $row['due_date'],
+                'column_name' => $row['column_name'],
+            ];
+        }
+
+        $merged = [];
+        $totals = [
+            'boards' => count($boards),
+            'tasks' => 0,
+            'urgent' => 0,
+            'high' => 0,
+            'overdue' => 0,
+            'due_this_week' => 0,
+        ];
+
+        foreach ($boards as $b) {
+            $id = (string) $b['id'];
+            $a = $aggByBoard[$id] ?? null;
+            $tasksTotal = $a !== null ? (int) $a['tasks_total'] : 0;
+            $urgent = $a !== null ? (int) $a['urgent'] : 0;
+            $high = $a !== null ? (int) $a['high_pri'] : 0;
+            $medium = $a !== null ? (int) $a['medium_pri'] : 0;
+            $low = $a !== null ? (int) $a['low_pri'] : 0;
+            $overdue = $a !== null ? (int) $a['overdue'] : 0;
+            $dueWeek = $a !== null ? (int) $a['due_week'] : 0;
+
+            $totals['tasks'] += $tasksTotal;
+            $totals['urgent'] += $urgent;
+            $totals['high'] += $high;
+            $totals['overdue'] += $overdue;
+            $totals['due_this_week'] += $dueWeek;
+
+            $merged[] = [
+                'id' => $id,
+                'name' => $b['name'],
+                'description' => $b['description'] ?? null,
+                'job_key' => $b['job_key'] ?? null,
+                'rubric_key' => $b['rubric_key'] ?? null,
+                'icon_key' => $b['icon_key'] ?? null,
+                'is_owner' => (bool) (int) ($b['is_owner'] ?? 0),
+                'stats' => [
+                    'tasks_total' => $tasksTotal,
+                    'urgent' => $urgent,
+                    'high' => $high,
+                    'medium' => $medium,
+                    'low' => $low,
+                    'overdue' => $overdue,
+                    'due_this_week' => $dueWeek,
+                ],
+                'hot_tasks' => $hotByBoard[$id] ?? [],
+            ];
+        }
+
+        ResponseService::json(true, ['boards' => $merged, 'totals' => $totals], null);
     }
 
     public function create(string $userId, array $payload): void

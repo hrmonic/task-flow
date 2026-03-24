@@ -9,7 +9,24 @@ import {
   refreshProfileFromApi,
 } from "./auth.js";
 import { popMoveSnapshot } from "./boardHistory.js";
-import { loadBoard, reloadActiveBoard } from "./kanban.js";
+import {
+  loadBoard,
+  reloadActiveBoard,
+  getBoardCache,
+  getTaskDoneMap,
+} from "./kanban.js";
+import {
+  escapeHtml,
+  formatRelativeDueDate,
+  taskPriorityClass,
+  taskPriorityLabel,
+} from "./escape.js";
+import {
+  BOARD_ICON_LIBRARY,
+  BOARD_JOB_CATALOG,
+  ICON_TO_JOB,
+  ICON_TO_RUBRIC,
+} from "./boardIconCatalog.js";
 
 const state = {
   boards: [],
@@ -38,104 +55,6 @@ const BOARD_DOT_PALETTE = [
   "#10b981",
   "#f97316",
 ];
-
-const BOARD_ICON_LIBRARY = {
-  none: { label: "Aucun pictogramme", svg: "" },
-  fs_fe_ui_design: { label: "UI Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2.5" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/><rect x="5.5" y="7" width="6.5" height="3" rx="1" fill="#A5B4FC"/><rect x="13" y="7" width="5.5" height="8" rx="1" fill="#C7D2FE"/><rect x="5.5" y="11" width="6.5" height="4" rx="1" fill="#818CF8"/><path d="M8 20h8" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round"/></svg>` },
-  fs_fe_ux_design: { label: "UX Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12c0-4.4 3.6-8 8-8h7v7c0 4.4-3.6 8-8 8H4v-7Z" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.5"/><circle cx="10" cy="10" r="2" fill="#38BDF8"/><path d="M14 14c-1 .9-2.2 1.4-3.8 1.4" stroke="#0EA5E9" stroke-width="1.5" stroke-linecap="round"/><circle cx="18" cy="6" r="2.2" fill="#FDBA74"/></svg>` },
-  fs_fe_accessibility: { label: "Accessibilité front", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="5.3" r="2.3" fill="#34D399"/><path d="M5 9h14M12 9v10M8.8 19l3.2-5 3.2 5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="3" width="18" height="18" rx="4" stroke="#10B981" stroke-width="1.5"/></svg>` },
-  fs_fe_state_management: { label: "State Management", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.3" fill="#60A5FA"/><circle cx="18" cy="6" r="2.3" fill="#A78BFA"/><circle cx="12" cy="18" r="2.5" fill="#F472B6"/><path d="M8.2 7.2 10.8 16M15.8 7.2 13.2 16M8.2 6h7.6" stroke="#6366F1" stroke-width="1.6" stroke-linecap="round"/></svg>` },
-  fs_fe_testing: { label: "Tests Front-end", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2.2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/><path d="m8 12 2.2 2.2L16 8.5" stroke="#F59E0B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 16h10" stroke="#B45309" stroke-width="1.4" stroke-linecap="round"/></svg>` },
-  fs_be_api_design: { label: "API Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/><path d="M9 9h6M9 12h6M9 15h3" stroke="#06B6D4" stroke-width="1.7" stroke-linecap="round"/><path d="m15.2 14.8 2.5 2.5m0-2.5-2.5 2.5" stroke="#0E7490" stroke-width="1.5" stroke-linecap="round"/></svg>` },
-  fs_be_database: { label: "Base de données", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="12" cy="6.5" rx="6.5" ry="2.8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/><path d="M5.5 6.5v8c0 1.5 2.9 2.8 6.5 2.8s6.5-1.3 6.5-2.8v-8" stroke="#3B82F6" stroke-width="1.5"/><path d="M5.5 10.5c0 1.5 2.9 2.8 6.5 2.8s6.5-1.3 6.5-2.8" stroke="#60A5FA" stroke-width="1.4"/></svg>` },
-  fs_be_auth: { label: "Auth & Sessions", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2.2" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/><path d="M8 10V8.4a4 4 0 0 1 8 0V10" stroke="#8B5CF6" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="15" r="1.4" fill="#A78BFA"/></svg>` },
-  fs_be_security: { label: "Sécurité back-end", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 7 3v5.8c0 4.5-2.9 7.6-7 9.2-4.1-1.6-7-4.7-7-9.2V6l7-3Z" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/><path d="m9.2 12.4 1.8 1.8 3.8-3.8" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  fs_be_performance: { label: "Performance API", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 16a7 7 0 1 1 14 0" stroke="#F97316" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12 8.5 15.5" stroke="#EA580C" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="16" r="1.3" fill="#FB923C"/><path d="M7 18h10" stroke="#FDBA74" stroke-width="1.6" stroke-linecap="round"/></svg>` },
-  fs_devops_ci_cd: { label: "CI / CD", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.4" fill="#ECFCCB" stroke="#65A30D" stroke-width="1.5"/><path d="m8 12 2.3 2.3L16 8.6" stroke="#84CC16" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 16h10" stroke="#4D7C0F" stroke-width="1.5" stroke-linecap="round"/></svg>` },
-  fs_devops_docker: { label: "Docker & Containers", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="8" width="3" height="3" rx=".6" fill="#60A5FA"/><rect x="8.8" y="8" width="3" height="3" rx=".6" fill="#3B82F6"/><rect x="12.6" y="8" width="3" height="3" rx=".6" fill="#2563EB"/><rect x="8.8" y="11.8" width="3" height="3" rx=".6" fill="#93C5FD"/><rect x="12.6" y="11.8" width="3" height="3" rx=".6" fill="#60A5FA"/><path d="M3.8 14.7c0 2.7 2.1 4.6 5.7 4.6h4.6c3.8 0 6.1-2.2 6.1-5.5 1-.1 1.8-1 1.8-2.2-.8.3-1.5.2-2.1-.2-.5-.4-.7-.9-.8-1.4-.6 1.2-1.7 1.9-3.1 1.9H9.2c-3.3 0-5.4 1.4-5.4 2.8Z" fill="#1D4ED8"/></svg>` },
-  fs_devops_monitoring: { label: "Monitoring", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="14" rx="2.3" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/><path d="M6.5 14h2.3l1.7-3.8 2.2 5.6 1.8-3.1h3.1" stroke="#14B8A6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17.5" cy="19.2" r="1.3" fill="#0D9488"/></svg>` },
-  fs_qa_unit: { label: "Tests unitaires", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4h8v2.2l-2.6 3v7.1a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2V9.2L6.4 6.2V4Z" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/><path d="m9.8 12 1.8 1.8 2.6-2.6" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  fs_qa_e2e: { label: "Tests E2E", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="7.5" height="6.8" rx="1.5" fill="#FAE8FF" stroke="#A21CAF" stroke-width="1.5"/><rect x="13" y="12.2" width="7.5" height="6.8" rx="1.5" fill="#F5D0FE" stroke="#C026D3" stroke-width="1.5"/><path d="M10.5 8.4h3M13.5 8.4l-1.1-1.1M13.5 8.4l-1.1 1.1" stroke="#D946EF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  fs_qa_audit: { label: "Audit Qualité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4.5" width="11" height="15" rx="2" fill="#FEF9C3" stroke="#CA8A04" stroke-width="1.5"/><path d="M8 8.5h5M8 11.5h5M8 14.5h3" stroke="#EAB308" stroke-width="1.6" stroke-linecap="round"/><circle cx="17.8" cy="16.8" r="2.2" fill="#FDE68A" stroke="#A16207" stroke-width="1.4"/><path d="m19.3 18.3 1.8 1.8" stroke="#A16207" stroke-width="1.4" stroke-linecap="round"/></svg>` },
-  design: { label: "Palette créative", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 3-1.1 3-2.5 0-.8-.4-1.5-1-2 .9-.2 1.8-.5 2.6-1 1.4-.8 2.4-2.2 2.4-3.9 0-4.7-3.8-8.6-8.6-8.6H12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.7" cy="10" r="1.1" fill="currentColor"/><circle cx="10.3" cy="7.2" r="1.1" fill="currentColor"/><circle cx="14.1" cy="7.5" r="1.1" fill="currentColor"/></svg>` },
-  accounting: { label: "Comptabilité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19h14M7 16V8m5 8V5m5 11v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 5.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5M9 8.2c.5-.5 1.3-.7 2-.4.7.3 1.2.9 1.2 1.7 0 1.4-1.4 2.2-3.2 2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>` },
-  communication: { label: "Communication", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v9H8l-4 4V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m7 10 5 3 5-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  management: { label: "Management", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M6 20a6 6 0 0 1 12 0M4 13l2 2 3-3M20 13l-2 2-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
-  strategy: { label: "Stratégie", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20V5m0 15h15m-9-4 3-3 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  marketing: { label: "Marketing", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 14c2.2-2.2 5.6-2.2 7.8 0M3 10.2c4.4-4.4 11.6-4.4 16 0M7.8 18.2a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
-  product: { label: "Produit", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21 4 16.5v-9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m4 7.5 8 4.5 8-4.5" stroke="currentColor" stroke-width="1.8"/></svg>` },
-  hr: { label: "Ressources humaines", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19a4.5 4.5 0 0 1 9 0M11.5 19a4.5 4.5 0 0 1 9 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
-  legal: { label: "Juridique", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M7 7h10M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 7 4 12h6L7 7Zm10 0-3 5h6l-3-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
-  operations: { label: "Opérations", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
-  it: { label: "IT / Développement", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 9-3 3 3 3m8-6 3 3-3 3M10 19l4-14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  finance: { label: "Finance", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19h16M6 16V9m4 7V5m4 11v-8m4 8v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
-  sales: { label: "Commercial", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 15h4l2-6 3 9 2-5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
-  education: { label: "Éducation", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 8 9-4 9 4-9 4-9-4Zm3 3.5v4.8c0 .5.2.9.6 1.1 3.6 2.1 7.2 2.1 10.8 0 .4-.2.6-.6.6-1.1v-4.8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
-  health: { label: "Santé", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20s-6.5-3.9-8.6-7.7C1.8 9.4 3.2 6 6.6 6c2.1 0 3.3 1.2 4.1 2.4.8-1.2 2-2.4 4.1-2.4 3.4 0 4.8 3.4 3.2 6.3C18.5 16.1 12 20 12 20Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
-  logistics: { label: "Logistique", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h13v8H3zM16 10h3l2 2v3h-5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/></svg>` },
-};
-
-const BOARD_JOB_CATALOG = {
-  general: { label: "Général", icons: ["none", "product", "strategy", "management"] },
-  fullstack: {
-    label: "Développeur full stack",
-    sections: [
-      { id: "fs_fe", label: "Front-end", icons: ["fs_fe_ui_design", "fs_fe_ux_design", "fs_fe_accessibility", "fs_fe_state_management", "fs_fe_testing"] },
-      { id: "fs_be", label: "Back-end", icons: ["fs_be_api_design", "fs_be_database", "fs_be_auth", "fs_be_security", "fs_be_performance"] },
-      { id: "fs_devops", label: "DevOps", icons: ["fs_devops_ci_cd", "fs_devops_docker", "fs_devops_monitoring"] },
-      { id: "fs_qa", label: "Qualité & Tests", icons: ["fs_qa_unit", "fs_qa_e2e", "fs_qa_audit"] },
-    ],
-  },
-  design: { label: "Design", icons: ["design", "product", "communication"] },
-  accounting: { label: "Comptabilité", icons: ["accounting", "finance", "strategy"] },
-  communication: { label: "Communication", icons: ["communication", "marketing", "management"] },
-  management: { label: "Management", icons: ["management", "strategy", "hr"] },
-  strategy: { label: "Stratégie", icons: ["strategy", "management", "finance"] },
-  marketing: { label: "Marketing", icons: ["marketing", "communication", "sales"] },
-  product: { label: "Produit", icons: ["product", "strategy", "design"] },
-  hr: { label: "Ressources humaines", icons: ["hr", "management", "communication"] },
-  legal: { label: "Juridique", icons: ["legal", "strategy", "management"] },
-  operations: { label: "Opérations", icons: ["operations", "logistics", "management"] },
-  it: { label: "IT / Développement", icons: ["it", "operations", "product"] },
-  finance: { label: "Finance", icons: ["finance", "accounting", "strategy"] },
-  sales: { label: "Commercial", icons: ["sales", "marketing", "communication"] },
-  education: { label: "Éducation", icons: ["education", "communication", "management"] },
-  health: { label: "Santé", icons: ["health", "management", "operations"] },
-  logistics: { label: "Logistique", icons: ["logistics", "operations", "strategy"] },
-  audit: { label: "Audit", icons: ["finance", "strategy", "legal"] },
-  ux_accessibility: { label: "UX & Accessibilité", icons: ["design", "communication", "product"] },
-};
-
-const ICON_TO_JOB = (() => {
-  const map = {};
-  Object.entries(BOARD_JOB_CATALOG).forEach(([jobKey, job]) => {
-    const sections = Array.isArray(job.sections)
-      ? job.sections
-      : [{ id: "default", label: "Tous", icons: job.icons || [] }];
-    sections.forEach((section) => (section.icons || []).forEach((iconKey) => {
-      if (!map[iconKey]) map[iconKey] = jobKey;
-    }));
-  });
-  return map;
-})();
-
-const ICON_TO_RUBRIC = (() => {
-  const map = {};
-  Object.entries(BOARD_JOB_CATALOG).forEach(([jobKey, job]) => {
-    const sections = Array.isArray(job.sections)
-      ? job.sections
-      : [{ id: "default", label: "Tous", icons: job.icons || [] }];
-    map[jobKey] = {};
-    sections.forEach((section) => {
-      (section.icons || []).forEach((iconKey) => {
-        if (!map[jobKey][iconKey]) {
-          map[jobKey][iconKey] = section.id;
-        }
-      });
-    });
-  });
-  return map;
-})();
 
 function setThemeMetaColor(theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -224,6 +143,246 @@ function syncAuthChrome() {
 
 function getDashboardEl() {
   return document.getElementById("dashboardSection");
+}
+
+/** @type {number} */
+let dashboardLoadSeq = 0;
+
+function localDoneSnapshotForBoard(boardId, serverTotal) {
+  const columns = getBoardCache(boardId);
+  const doneMap = getTaskDoneMap();
+  if (!columns) {
+    return { hasCache: false, done: 0, activeHint: null };
+  }
+  let done = 0;
+  for (const col of columns) {
+    for (const t of col.tasks || []) {
+      if (doneMap[t.id]) done += 1;
+    }
+  }
+  const total = Math.max(0, Number(serverTotal) || 0);
+  const doneClamped = Math.min(done, total);
+  return {
+    hasCache: true,
+    done: doneClamped,
+    activeHint: Math.max(0, total - doneClamped),
+  };
+}
+
+function sortDashboardBoards(boards) {
+  return [...boards].sort((a, b) => {
+    const sa =
+      (a.stats?.urgent || 0) * 1000 +
+      (a.stats?.high || 0) * 100 +
+      (a.stats?.overdue || 0) * 50 +
+      (a.stats?.tasks_total || 0);
+    const sb =
+      (b.stats?.urgent || 0) * 1000 +
+      (b.stats?.high || 0) * 100 +
+      (b.stats?.overdue || 0) * 50 +
+      (b.stats?.tasks_total || 0);
+    if (sb !== sa) return sb - sa;
+    return String(a.name || "").localeCompare(String(b.name || ""), "fr");
+  });
+}
+
+/**
+ * @param {{ boards: object[], totals: object }} data
+ * @param {HTMLElement} summaryEl
+ * @param {HTMLElement} boardsEl
+ */
+function renderDashboardIntoDom(data, summaryEl, boardsEl) {
+  const totals = data.totals || {};
+  const boards = sortDashboardBoards(Array.isArray(data.boards) ? data.boards : []);
+
+  const tBoards = Number(totals.boards) || 0;
+  const tTasks = Number(totals.tasks) || 0;
+  const tUrgent = Number(totals.urgent) || 0;
+  const tHigh = Number(totals.high) || 0;
+  const tOverdue = Number(totals.overdue) || 0;
+  const tWeek = Number(totals.due_this_week) || 0;
+
+  summaryEl.innerHTML = `
+    <h2 class="tf-dashboard-section-title">Synthèse</h2>
+    <div class="tf-dashboard-stat-grid" role="list">
+      <div class="tf-dashboard-stat" role="listitem">
+        <span class="tf-dashboard-stat-value">${tBoards}</span>
+        <span class="tf-dashboard-stat-label">Projets (tableaux)</span>
+      </div>
+      <div class="tf-dashboard-stat" role="listitem">
+        <span class="tf-dashboard-stat-value">${tTasks}</span>
+        <span class="tf-dashboard-stat-label">Tâches au total</span>
+      </div>
+      <div class="tf-dashboard-stat tf-dashboard-stat--warn" role="listitem">
+        <span class="tf-dashboard-stat-value">${tUrgent + tHigh}</span>
+        <span class="tf-dashboard-stat-label">Urgentes / hautes</span>
+      </div>
+      <div class="tf-dashboard-stat tf-dashboard-stat--danger" role="listitem">
+        <span class="tf-dashboard-stat-value">${tOverdue}</span>
+        <span class="tf-dashboard-stat-label">En retard (échéance)</span>
+      </div>
+      <div class="tf-dashboard-stat" role="listitem">
+        <span class="tf-dashboard-stat-value">${tWeek}</span>
+        <span class="tf-dashboard-stat-label">Échéance sous 7 j.</span>
+      </div>
+    </div>`;
+
+  if (boards.length === 0) {
+    boardsEl.innerHTML = `<p class="tf-muted">Aucun tableau pour l’instant.</p>`;
+    return;
+  }
+
+  boardsEl.innerHTML = `<h2 class="tf-dashboard-section-title">Par projet</h2>
+    <div class="tf-dashboard-board-grid"></div>`;
+  const grid = boardsEl.querySelector(".tf-dashboard-board-grid");
+  if (!grid) return;
+
+  boards.forEach((b) => {
+    const id = escapeHtml(b.id);
+    const name = escapeHtml(b.name || "Sans nom");
+    const st = b.stats || {};
+    const total = Number(st.tasks_total) || 0;
+    const urgent = Number(st.urgent) || 0;
+    const high = Number(st.high) || 0;
+    const medium = Number(st.medium) || 0;
+    const low = Number(st.low) || 0;
+    const overdue = Number(st.overdue) || 0;
+    const dueWeek = Number(st.due_this_week) || 0;
+    const local = localDoneSnapshotForBoard(b.id, total);
+    const alertCard = urgent > 0 || overdue > 0;
+
+    const iconKey =
+      typeof b.icon_key === "string" && BOARD_ICON_LIBRARY[b.icon_key]
+        ? b.icon_key
+        : "none";
+    const iconHtml =
+      iconKey !== "none"
+        ? `<span class="tf-dashboard-board-icon" aria-hidden="true">${BOARD_ICON_LIBRARY[iconKey].svg}</span>`
+        : `<span class="tf-dashboard-board-dot" style="background:${escapeHtml(boardAccent(b.id))}" aria-hidden="true"></span>`;
+
+    const hotList = Array.isArray(b.hot_tasks) ? b.hot_tasks : [];
+    const hotHtml =
+      hotList.length === 0
+        ? `<p class="tf-dashboard-hot-empty tf-muted">Aucune tâche prioritaire saillante.</p>`
+        : `<ul class="tf-dashboard-hot-list" aria-label="Tâches à traiter en priorité pour ${name}">
+            ${hotList
+              .map((task) => {
+                const pr = taskPriorityClass(task.priority);
+                const prLabel = escapeHtml(taskPriorityLabel(task.priority));
+                const title = escapeHtml(task.title || "");
+                const due = formatRelativeDueDate(task.due_date);
+                const dueHtml = due
+                  ? `<span class="tf-dashboard-hot-due">${escapeHtml(due)}</span>`
+                  : "";
+                const col = escapeHtml(task.column_name || "");
+                return `<li class="tf-dashboard-hot-item">
+                  <span class="task-priority-pill task-priority-pill--${pr}"><span class="task-priority-dot" aria-hidden="true"></span>${prLabel}</span>
+                  <span class="tf-dashboard-hot-title">${title}</span>
+                  <span class="tf-dashboard-hot-meta">${col}${col && dueHtml ? " · " : ""}${dueHtml}</span>
+                </li>`;
+              })
+              .join("")}
+          </ul>`;
+
+    const doneLine = local.hasCache
+      ? `<p class="tf-dashboard-local tf-muted">Sur cet appareil : <strong>${local.done}</strong> terminée(s), <strong>${local.activeHint}</strong> reste(nt) à traiter (approx.)</p>`
+      : "";
+
+    const card = document.createElement("article");
+    card.className =
+      "tf-card tf-dashboard-board-card" +
+      (alertCard ? " tf-dashboard-board-card--alert" : "");
+    card.setAttribute("data-board-id", b.id);
+    card.innerHTML = `
+      <div class="tf-card-body">
+        <div class="tf-dashboard-board-head">
+          ${iconHtml}
+          <div class="tf-dashboard-board-head-text">
+            <h3 class="tf-dashboard-board-name">${name}</h3>
+            ${b.is_owner === false ? `<p class="tf-dashboard-board-role tf-muted">Contributeur</p>` : ""}
+          </div>
+          <button type="button" class="tf-btn tf-btn--primary tf-btn--sm tf-dashboard-open-board" data-board-id="${id}">Ouvrir</button>
+        </div>
+        <div class="tf-dashboard-metrics" role="list">
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val">${total}</span> total</div>
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val tf-dashboard-metric-val--urgent">${urgent}</span> urgentes</div>
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val">${high}</span> hautes</div>
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val">${medium + low}</span> autres</div>
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val tf-dashboard-metric-val--danger">${overdue}</span> en retard</div>
+          <div class="tf-dashboard-metric" role="listitem"><span class="tf-dashboard-metric-val">${dueWeek}</span> échéance 7 j.</div>
+        </div>
+        ${doneLine}
+        <div class="tf-dashboard-hot-block">
+          <h4 class="tf-dashboard-hot-heading">À traiter en priorité</h4>
+          ${hotHtml}
+        </div>
+      </div>`;
+    grid.appendChild(card);
+    card.querySelector(".tf-dashboard-open-board")?.addEventListener("click", () => {
+      focusBoard(b.id);
+    });
+  });
+}
+
+async function refreshDashboard() {
+  const summary = document.getElementById("dashboardSummary");
+  const boardsEl = document.getElementById("dashboardBoards");
+  if (!summary || !boardsEl || !getToken()) return;
+  const seq = (dashboardLoadSeq += 1);
+  summary.setAttribute("aria-busy", "true");
+  boardsEl.setAttribute("aria-busy", "true");
+  summary.innerHTML = `<p class="tf-dashboard-loading tf-muted">Chargement du tableau de bord…</p>`;
+  boardsEl.innerHTML = "";
+  try {
+    const data = await apiFetch("/api/dashboard");
+    if (seq !== dashboardLoadSeq) return;
+    renderDashboardIntoDom(data, summary, boardsEl);
+  } catch (e) {
+    if (seq !== dashboardLoadSeq) return;
+    const msg = escapeHtml(
+      e instanceof Error ? e.message : "Chargement impossible.",
+    );
+    summary.innerHTML = `<div class="tf-dashboard-error board-inline-error mb-0" role="alert">${msg}
+      <button type="button" class="tf-btn tf-btn--ghost tf-btn--sm" id="dashboardRetryBtn">Réessayer</button></div>`;
+    document.getElementById("dashboardRetryBtn")?.addEventListener("click", () => {
+      refreshDashboard();
+    });
+  } finally {
+    if (seq === dashboardLoadSeq) {
+      summary.setAttribute("aria-busy", "false");
+      boardsEl.setAttribute("aria-busy", "false");
+    }
+  }
+}
+
+/**
+ * @param {string} boardId
+ * @param {{ switchView?: boolean }} [opts]
+ */
+async function focusBoard(boardId, opts = {}) {
+  const { switchView = true } = opts;
+  const sel = document.getElementById("boardSelect");
+  if (!sel || !state.boards.some((b) => b.id === boardId)) return;
+  sel.value = boardId;
+  state.activeBoardId = boardId;
+  persistActiveBoardId(boardId);
+  syncBoardEditorFromState();
+  renderBoardSidebar(state.boards, boardId);
+  if (switchView) {
+    showAppView("boards");
+    scrollToSection("boardSection");
+  }
+  try {
+    await loadBoard(boardId);
+    await refreshBoardContributors();
+    await refreshBoardActivity();
+  } catch (err) {
+    showToast(
+      err instanceof Error ? err.message : "Chargement impossible.",
+      true,
+    );
+  }
+  closeMobileNav();
 }
 
 function getBoardSectionEl() {
@@ -506,6 +665,7 @@ function showAppView(view) {
     if (auth) auth.hidden = true;
     syncAuthChrome();
     persistAppView("dashboard");
+    refreshDashboard();
     return;
   }
   if (view === "boards") {
@@ -942,23 +1102,7 @@ function renderBoardSidebar(boards, activeId) {
       btn.appendChild(icon);
     }
     btn.addEventListener("click", async () => {
-      const sel = document.getElementById("boardSelect");
-      if (sel) sel.value = b.id;
-      state.activeBoardId = b.id;
-      persistActiveBoardId(state.activeBoardId);
-      syncBoardEditorFromState();
-      renderBoardSidebar(state.boards, state.activeBoardId);
-      try {
-        await loadBoard(b.id);
-        await refreshBoardContributors();
-        await refreshBoardActivity();
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Chargement impossible.",
-          true,
-        );
-      }
-      closeMobileNav();
+      await focusBoard(b.id, { switchView: false });
     });
     li.appendChild(btn);
     ul.appendChild(li);
@@ -992,6 +1136,7 @@ async function createBoardByName(rawName) {
     await loadBoard(board.id);
     await refreshBoardContributors(true);
     await refreshBoardActivity(true);
+    refreshDashboard();
     return true;
   } catch (err) {
     const message =
@@ -1603,6 +1748,7 @@ async function bootstrapBoard(forceNetwork = false) {
     await refreshBoardContributors(forceNetwork);
     await refreshIncomingInvitations(forceNetwork);
     await refreshBoardActivity(forceNetwork);
+    refreshDashboard();
   } catch (err) {
     if (err instanceof Error && /Unauthorized/i.test(err.message)) {
       logout();
@@ -1670,6 +1816,7 @@ async function bootstrapBoard(forceNetwork = false) {
       renderBoardSidebar(state.boards, state.activeBoardId);
       await refreshBoardContributors(true);
       await refreshBoardActivity(true);
+      refreshDashboard();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Enregistrement impossible.",
@@ -1707,6 +1854,7 @@ async function bootstrapBoard(forceNetwork = false) {
       await loadBoard(state.activeBoardId);
       await refreshBoardContributors(true);
       await refreshBoardActivity(true);
+      refreshDashboard();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Suppression impossible.",

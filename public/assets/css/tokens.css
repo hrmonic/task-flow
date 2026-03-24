@@ -69,6 +69,12 @@
   --kanban-count-text: #e8eafc;
   --kanban-priority-none: #4b4e68;
   --kanban-muted-text: #5c5b7a;
+  --kanban-header-text: #f3f4ff;
+  --kanban-header-pill-bg: rgba(255, 255, 255, 0.12);
+  --kanban-header-pill-border: rgba(255, 255, 255, 0.22);
+  --kanban-header-icon-bg: rgba(255, 255, 255, 0.08);
+  --kanban-header-icon-border: rgba(255, 255, 255, 0.22);
+  --kanban-header-icon-hover-bg: rgba(255, 255, 255, 0.18);
   --task-inprogress-bg: rgba(99, 102, 241, 0.06);
   --task-done-bg: rgba(16, 185, 129, 0.14);
   --task-done-border: rgba(16, 185, 129, 0.42);
@@ -113,7 +119,7 @@
   --hero-bg: linear-gradient(135deg, rgba(226, 236, 255, 0.95) 0%, rgba(241, 246, 255, 0.95) 100%);
 
   --kanban-column-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98));
-  --kanban-column-header-bg: linear-gradient(180deg, rgba(247, 250, 255, 0.98), rgba(241, 246, 255, 0.95));
+  --kanban-column-header-bg: linear-gradient(135deg, #5b49e6 0%, #6d4bff 52%, #7a4fff 100%);
   --kanban-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
   --kanban-add-bg: rgba(226, 236, 255, 0.55);
   --kanban-task-shadow: 0 8px 18px rgba(102, 123, 167, 0.2);
@@ -124,6 +130,12 @@
   --kanban-count-text: #1e2a4c;
   --kanban-priority-none: #94a3b8;
   --kanban-muted-text: #55617a;
+  --kanban-header-text: #ffffff;
+  --kanban-header-pill-bg: rgba(255, 255, 255, 0.16);
+  --kanban-header-pill-border: rgba(255, 255, 255, 0.28);
+  --kanban-header-icon-bg: rgba(255, 255, 255, 0.14);
+  --kanban-header-icon-border: rgba(255, 255, 255, 0.24);
+  --kanban-header-icon-hover-bg: rgba(255, 255, 255, 0.24);
   --task-inprogress-bg: rgba(79, 70, 229, 0.08);
   --task-done-bg: rgba(16, 185, 129, 0.2);
   --task-done-border: rgba(5, 150, 105, 0.38);

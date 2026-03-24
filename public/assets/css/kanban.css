@@ -74,6 +74,7 @@
   border-bottom: 1px solid var(--border-subtle);
   background: var(--kanban-column-header-bg);
   backdrop-filter: blur(4px);
+  color: var(--kanban-header-text);
 }
 
 .column-header-row {
@@ -104,6 +105,7 @@
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.2;
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,9 +126,9 @@
   border-radius: 999px;
   font-size: 0.73rem;
   font-weight: 700;
-  color: var(--kanban-count-text);
-  background: color-mix(in srgb, var(--column-accent, var(--accent)) 22%, rgba(12, 13, 19, 0.95));
-  border: 1px solid color-mix(in srgb, var(--column-accent, var(--accent)) 40%, transparent);
+  color: var(--kanban-header-text);
+  background: var(--kanban-header-pill-bg);
+  border: 1px solid var(--kanban-header-pill-border);
 }
 
 .column-header-actions {
@@ -143,16 +145,16 @@
   height: 1.7rem;
   padding: 0;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-subtle);
-  background: var(--kanban-soft-bg);
-  color: var(--text-muted);
+  border: 1px solid var(--kanban-header-icon-border);
+  background: var(--kanban-header-icon-bg);
+  color: var(--kanban-header-text);
   cursor: pointer;
 }
 
 .icon-btn:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: var(--kanban-soft-bg-hover);
+  color: var(--kanban-header-text);
+  border-color: var(--kanban-header-pill-border);
+  background: var(--kanban-header-icon-hover-bg);
 }
 
 .icon-btn--danger:hover {
@@ -826,6 +828,33 @@
 
 .task:hover {
   transform: translateY(-1px);
+}
+
+/* MODE LIGHT : ENTETE VIOLET + TEXTE BLANC */
+:root[data-theme="light"] .kanban-column .column-header {
+  background: linear-gradient(135deg, #5b49e6 0%, #6d4bff 52%, #7a4fff 100%) !important;
+  color: #ffffff !important;
+  border-bottom-color: rgba(255, 255, 255, 0.24) !important;
+}
+
+:root[data-theme="light"] .kanban-column .column-header h3,
+:root[data-theme="light"] .kanban-column .column-task-count,
+:root[data-theme="light"] .kanban-column .icon-btn {
+  color: #ffffff !important;
+}
+
+:root[data-theme="light"] .kanban-column .column-task-count {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:root[data-theme="light"] .kanban-column .icon-btn {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+:root[data-theme="light"] .kanban-column .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
 }
 
 .task-card-footer {

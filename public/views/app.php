@@ -157,10 +157,14 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
 
                 <div class="toolbar-grid">
                   <div class="tf-field toolbar-field--active">
-                    <label class="tf-label" for="boardTitleInput">Tableau actif</label>
+                    <label class="tf-label" for="boardTitleInput">Titre du tableau actif</label>
                     <div class="tf-input-row">
                       <input id="boardTitleInput" type="text" class="tf-input" placeholder="Ex. Sprint marketing Q2" autocomplete="off" maxlength="120" aria-label="Titre du tableau actif">
                       <button type="button" id="saveBoardBtn" class="tf-btn tf-btn--primary">Enregistrer</button>
+                    </div>
+                    <div class="board-icon-picker">
+                      <label class="tf-label board-icon-picker-label" for="boardIconSelect">Nature du tableau</label>
+                      <select id="boardIconSelect" class="tf-select board-icon-select" aria-label="Choisir la nature du tableau"></select>
                     </div>
                   </div>
                   <div class="tf-field toolbar-field--desc">

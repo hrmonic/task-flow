@@ -15,6 +15,7 @@ const state = { boards: [], activeBoardId: null };
 const THEME_STORAGE_KEY = "taskflow_theme";
 const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
 const ACTIVE_BOARD_STORAGE_KEY = "taskflow_active_board_id";
+const BOARD_ICON_STORAGE_KEY = "taskflow_board_icon_map";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
@@ -26,6 +27,26 @@ const BOARD_DOT_PALETTE = [
   "#10b981",
   "#f97316",
 ];
+
+const BOARD_ICON_LIBRARY = {
+  none: { label: "Aucun pictogramme", svg: "" },
+  design: { label: "Design", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 3-1.1 3-2.5 0-.8-.4-1.5-1-2 .9-.2 1.8-.5 2.6-1 1.4-.8 2.4-2.2 2.4-3.9 0-4.7-3.8-8.6-8.6-8.6H12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="7.7" cy="10" r="1.1" fill="currentColor"/><circle cx="10.3" cy="7.2" r="1.1" fill="currentColor"/><circle cx="14.1" cy="7.5" r="1.1" fill="currentColor"/></svg>` },
+  accounting: { label: "Comptabilité", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3v18M18 3v18M9 7h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
+  communication: { label: "Communication", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16v10H8l-4 4V6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
+  management: { label: "Management", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M6 20a6 6 0 0 1 12 0M4 13l2 2 3-3M20 13l-2 2-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
+  strategy: { label: "Stratégie", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20V5m0 15h15m-9-4 3-3 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  marketing: { label: "Marketing", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 11v2l13 5V6L3 11Zm13 1h3a2 2 0 0 1 0 4h-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  product: { label: "Produit", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21 4 16.5v-9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m4 7.5 8 4.5 8-4.5" stroke="currentColor" stroke-width="1.8"/></svg>` },
+  hr: { label: "Ressources humaines", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="8" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19a4.5 4.5 0 0 1 9 0M11.5 19a4.5 4.5 0 0 1 9 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
+  legal: { label: "Juridique", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M7 7h10M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 7 4 12h6L7 7Zm10 0-3 5h6l-3-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
+  operations: { label: "Opérations", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
+  it: { label: "IT / Développement", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 9-3 3 3 3m8-6 3 3-3 3M10 19l4-14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  finance: { label: "Finance", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19h16M6 16V9m4 7V5m4 11v-8m4 8v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>` },
+  sales: { label: "Commercial", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 15h4l2-6 3 9 2-5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  education: { label: "Éducation", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 8 9-4 9 4-9 4-9-4Zm3 3.5v4.8c0 .5.2.9.6 1.1 3.6 2.1 7.2 2.1 10.8 0 .4-.2.6-.6.6-1.1v-4.8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>` },
+  health: { label: "Santé", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.8"/></svg>` },
+  logistics: { label: "Logistique", svg: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h13v8H3zM16 10h3l2 2v3h-5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="17" r="1.8" stroke="currentColor" stroke-width="1.8"/></svg>` },
+};
 
 function setThemeMetaColor(theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -128,6 +149,81 @@ function getStoredActiveBoardId() {
 function persistActiveBoardId(boardId) {
   if (!boardId) return;
   localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, boardId);
+}
+
+function getBoardIconMap() {
+  try {
+    const raw = localStorage.getItem(BOARD_ICON_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setBoardIconMap(map) {
+  localStorage.setItem(BOARD_ICON_STORAGE_KEY, JSON.stringify(map));
+}
+
+function normalizeBoardIconKey(iconKey) {
+  if (!iconKey || typeof iconKey !== "string") return "none";
+  return BOARD_ICON_LIBRARY[iconKey] ? iconKey : "none";
+}
+
+function getBoardIconKey(boardId) {
+  if (!boardId) return "none";
+  const map = getBoardIconMap();
+  return normalizeBoardIconKey(map[boardId]);
+}
+
+function setBoardIconKey(boardId, iconKey) {
+  if (!boardId) return;
+  const map = getBoardIconMap();
+  const next = normalizeBoardIconKey(iconKey);
+  if (next === "none") {
+    delete map[boardId];
+  } else {
+    map[boardId] = next;
+  }
+  setBoardIconMap(map);
+}
+
+function removeBoardIconKey(boardId) {
+  if (!boardId) return;
+  const map = getBoardIconMap();
+  if (!Object.prototype.hasOwnProperty.call(map, boardId)) return;
+  delete map[boardId];
+  setBoardIconMap(map);
+}
+
+function populateBoardIconSelect() {
+  const select = document.getElementById("boardIconSelect");
+  if (!select) return;
+  select.replaceChildren();
+  Object.entries(BOARD_ICON_LIBRARY).forEach(([key, meta]) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = meta.label;
+    select.appendChild(option);
+  });
+}
+
+function syncBoardIconSelect(boardId) {
+  const select = document.getElementById("boardIconSelect");
+  if (!select) return;
+  select.value = getBoardIconKey(boardId);
+}
+
+function wireBoardIconPicker() {
+  const select = document.getElementById("boardIconSelect");
+  if (!select) return;
+  populateBoardIconSelect();
+  select.addEventListener("change", () => {
+    if (!state.activeBoardId) return;
+    setBoardIconKey(state.activeBoardId, select.value);
+    renderBoardSidebar(state.boards, state.activeBoardId);
+  });
 }
 
 /** @param {"dashboard" | "boards" | "auth"} view */
@@ -261,6 +357,7 @@ function syncBoardEditorFromState() {
   if (!b) return;
   titleIn.value = b.name || "";
   descIn.value = b.description ? String(b.description) : "";
+  syncBoardIconSelect(id);
 }
 
 function setBoardToolbarError(message = "") {
@@ -299,7 +396,18 @@ function renderBoardSidebar(boards, activeId) {
     dot.style.background = boardAccent(b.id);
     dot.setAttribute("aria-hidden", "true");
     btn.appendChild(dot);
-    btn.appendChild(document.createTextNode(b.name || "Sans nom"));
+    const name = document.createElement("span");
+    name.className = "tf-board-item-text";
+    name.textContent = b.name || "Sans nom";
+    btn.appendChild(name);
+    const iconKey = getBoardIconKey(b.id);
+    if (iconKey !== "none") {
+      const icon = document.createElement("span");
+      icon.className = "tf-board-item-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML = BOARD_ICON_LIBRARY[iconKey].svg;
+      btn.appendChild(icon);
+    }
     btn.addEventListener("click", async () => {
       const sel = document.getElementById("boardSelect");
       if (sel) sel.value = b.id;
@@ -895,6 +1003,7 @@ async function bootstrapBoard() {
   setAuthenticatedShell(true);
   refreshNavUser();
   wireSidebarBoardCreator();
+  wireBoardIconPicker();
 
   logoutBtn.hidden = false;
   authSection.hidden = true;
@@ -998,6 +1107,7 @@ async function bootstrapBoard() {
     setBoardToolbarError("");
     try {
       await apiFetch(`/api/boards/${id}`, { method: "DELETE" });
+      removeBoardIconKey(id);
       state.boards = state.boards.filter((b) => b.id !== id);
       if (state.boards.length === 0) {
         const b = await apiFetch("/api/boards", {

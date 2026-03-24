@@ -21,9 +21,13 @@ const THEME_STORAGE_KEY = "taskflow_theme";
 const APP_VIEW_STORAGE_KEY = "taskflow_active_view";
 const ACTIVE_BOARD_STORAGE_KEY = "taskflow_active_board_id";
 const BOARD_ICON_STORAGE_KEY = "taskflow_board_icon_map";
+const LAYOUT_SIDEBAR_KEY = "taskflow_layout_sidebar_visible";
+const LAYOUT_INFO_KEY = "taskflow_layout_info_visible";
+const LAYOUT_ACTIVITY_KEY = "taskflow_layout_activity_visible";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
+let boardActivityPollInterval = null;
 
 const BOARD_DOT_PALETTE = [
   "#6366f1",
@@ -154,6 +158,53 @@ function getStoredActiveBoardId() {
 function persistActiveBoardId(boardId) {
   if (!boardId) return;
   localStorage.setItem(ACTIVE_BOARD_STORAGE_KEY, boardId);
+}
+
+function isLayoutVisible(storageKey, defaultVisible = true) {
+  const raw = localStorage.getItem(storageKey);
+  if (raw === null) return defaultVisible;
+  return raw === "1";
+}
+
+function persistLayoutVisible(storageKey, visible) {
+  localStorage.setItem(storageKey, visible ? "1" : "0");
+}
+
+function applyBoardLayoutVisibility() {
+  const sidebar = document.getElementById("boardSidebar");
+  const info = document.getElementById("boardInfoPanel");
+  const activity = document.getElementById("boardActivityPanel");
+  const toggleSidebar = document.getElementById("toggleSidebarBtn");
+  const toggleInfo = document.getElementById("toggleBoardInfoBtn");
+  const toggleActivity = document.getElementById("toggleBoardActivityBtn");
+  const sidebarVisible = isLayoutVisible(LAYOUT_SIDEBAR_KEY, true);
+  const infoVisible = isLayoutVisible(LAYOUT_INFO_KEY, true);
+  const activityVisible = isLayoutVisible(LAYOUT_ACTIVITY_KEY, true);
+
+  if (sidebar) sidebar.hidden = !sidebarVisible;
+  if (info) info.hidden = !infoVisible;
+  if (activity) activity.hidden = !activityVisible;
+  if (toggleSidebar) toggleSidebar.textContent = sidebarVisible ? "Masquer la barre latérale" : "Afficher la barre latérale";
+  if (toggleInfo) toggleInfo.textContent = infoVisible ? "Masquer les informations" : "Afficher les informations";
+  if (toggleActivity) toggleActivity.textContent = activityVisible ? "Masquer l'historique" : "Afficher l'historique";
+}
+
+function wireBoardLayoutToggles() {
+  const toggleSidebar = document.getElementById("toggleSidebarBtn");
+  const toggleInfo = document.getElementById("toggleBoardInfoBtn");
+  const toggleActivity = document.getElementById("toggleBoardActivityBtn");
+  toggleSidebar?.addEventListener("click", () => {
+    persistLayoutVisible(LAYOUT_SIDEBAR_KEY, !isLayoutVisible(LAYOUT_SIDEBAR_KEY, true));
+    applyBoardLayoutVisibility();
+  });
+  toggleInfo?.addEventListener("click", () => {
+    persistLayoutVisible(LAYOUT_INFO_KEY, !isLayoutVisible(LAYOUT_INFO_KEY, true));
+    applyBoardLayoutVisibility();
+  });
+  toggleActivity?.addEventListener("click", () => {
+    persistLayoutVisible(LAYOUT_ACTIVITY_KEY, !isLayoutVisible(LAYOUT_ACTIVITY_KEY, true));
+    applyBoardLayoutVisibility();
+  });
 }
 
 function getBoardIconMap() {
@@ -372,6 +423,73 @@ function setBoardToolbarError(message = "") {
   el.hidden = !message;
 }
 
+function describeActivityAction(action) {
+  if (action === "task_created") return "a créé une tâche";
+  if (action === "task_updated") return "a modifié une tâche";
+  if (action === "task_moved") return "a déplacé une tâche";
+  return "a modifié une tâche";
+}
+
+function formatActivityDate(value) {
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return "";
+  return dt.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function renderBoardActivity(items) {
+  const host = document.getElementById("boardActivityList");
+  if (!host) return;
+  host.replaceChildren();
+  if (!Array.isArray(items) || items.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "tf-muted mb-0";
+    empty.textContent = "Aucune modification récente.";
+    host.appendChild(empty);
+    return;
+  }
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "board-activity-item";
+    const main = document.createElement("div");
+    main.textContent = `${item.actor_name || "Un contributeur"} ${describeActivityAction(item.action)}.`;
+    const meta = document.createElement("div");
+    meta.className = "board-activity-meta";
+    meta.textContent = formatActivityDate(item.created_at);
+    row.append(main, meta);
+    host.appendChild(row);
+  });
+}
+
+async function refreshBoardActivity() {
+  if (!state.activeBoardId) {
+    renderBoardActivity([]);
+    return;
+  }
+  try {
+    const activity = await apiFetch(`/api/boards/${state.activeBoardId}/activity`);
+    renderBoardActivity(Array.isArray(activity) ? activity : []);
+  } catch {
+    renderBoardActivity([]);
+  }
+}
+
+function startBoardActivityPolling() {
+  if (boardActivityPollInterval) {
+    window.clearInterval(boardActivityPollInterval);
+    boardActivityPollInterval = null;
+  }
+  boardActivityPollInterval = window.setInterval(() => {
+    const panel = document.getElementById("boardActivityPanel");
+    if (!panel || panel.hidden) return;
+    refreshBoardActivity();
+  }, 25000);
+}
+
 function updateInvitationBadge(count) {
   const badge = document.getElementById("navInvitationCount");
   if (!badge) return;
@@ -558,7 +676,7 @@ function renderBoardSidebar(boards, activeId) {
   const aside = document.getElementById("boardSidebar");
   const ul = document.getElementById("boardSidebarList");
   if (!aside || !ul) return;
-  aside.hidden = boards.length === 0;
+  aside.hidden = boards.length === 0 || !isLayoutVisible(LAYOUT_SIDEBAR_KEY, true);
   ul.replaceChildren();
   boards.forEach((b) => {
     const li = document.createElement("li");
@@ -593,6 +711,8 @@ function renderBoardSidebar(boards, activeId) {
       renderBoardSidebar(state.boards, state.activeBoardId);
       try {
         await loadBoard(b.id);
+        await refreshBoardContributors();
+        await refreshBoardActivity();
       } catch (err) {
         showToast(
           err instanceof Error ? err.message : "Chargement impossible.",
@@ -631,6 +751,7 @@ async function createBoardByName(rawName) {
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(board.id);
     await refreshBoardContributors();
+    await refreshBoardActivity();
     return true;
   } catch (err) {
     const message =
@@ -1196,6 +1317,9 @@ async function bootstrapBoard() {
   wireSidebarBoardCreator();
   wireBoardIconPicker();
   wireContributorControls();
+  wireBoardLayoutToggles();
+  applyBoardLayoutVisibility();
+  startBoardActivityPolling();
 
   logoutBtn.hidden = false;
   authSection.hidden = true;
@@ -1226,6 +1350,7 @@ async function bootstrapBoard() {
     await loadBoard(state.activeBoardId);
     await refreshBoardContributors();
     await refreshIncomingInvitations();
+    await refreshBoardActivity();
   } catch (err) {
     kanban.replaceChildren();
     const msg = document.createElement("p");
@@ -1247,6 +1372,7 @@ async function bootstrapBoard() {
     try {
       await loadBoard(state.activeBoardId);
       await refreshBoardContributors();
+      await refreshBoardActivity();
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Chargement du tableau impossible.",
@@ -1283,6 +1409,7 @@ async function bootstrapBoard() {
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
       await refreshBoardContributors();
+      await refreshBoardActivity();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Enregistrement impossible.",
@@ -1319,6 +1446,7 @@ async function bootstrapBoard() {
       renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(state.activeBoardId);
       await refreshBoardContributors();
+      await refreshBoardActivity();
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Suppression impossible.",

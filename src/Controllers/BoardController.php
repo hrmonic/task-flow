@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\BoardRepository;
 use App\Repositories\BoardInvitationRepository;
+use App\Repositories\TaskActivityRepository;
 use App\Repositories\UserRepository;
 use App\Services\InvitationMailerService;
 use App\Services\ResponseService;
@@ -16,12 +17,14 @@ final class BoardController
 {
     private BoardRepository $boards;
     private BoardInvitationRepository $invitations;
+    private TaskActivityRepository $activities;
     private UserRepository $users;
     private InvitationMailerService $mailer;
     public function __construct()
     {
         $this->boards = new BoardRepository();
         $this->invitations = new BoardInvitationRepository();
+        $this->activities = new TaskActivityRepository();
         $this->users = new UserRepository();
         $this->mailer = new InvitationMailerService();
     }
@@ -173,5 +176,15 @@ final class BoardController
 
         $this->invitations->removeContributor($boardId, $targetUserId);
         ResponseService::json(true, ['removed' => true], null);
+    }
+
+    public function activity(string $userId, array $payload): void
+    {
+        $boardId = (string) ($payload['id'] ?? '');
+        if (!$this->boards->belongsToUser($boardId, $userId)) {
+            ResponseService::json(false, null, 'Board not found', [], 404);
+            return;
+        }
+        ResponseService::json(true, $this->activities->latestByBoard($boardId, 80), null);
     }
 }

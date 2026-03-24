@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\BoardRepository;
 use App\Repositories\ColumnRepository;
+use App\Repositories\TaskActivityRepository;
 use App\Repositories\TaskRepository;
 use App\Services\ResponseService;
 use App\Services\ValidationService;
@@ -15,7 +16,14 @@ final class TaskController
     private TaskRepository $tasks;
     private ColumnRepository $columns;
     private BoardRepository $boards;
-    public function __construct() { $this->tasks = new TaskRepository(); $this->columns = new ColumnRepository(); $this->boards = new BoardRepository(); }
+    private TaskActivityRepository $activities;
+    public function __construct()
+    {
+        $this->tasks = new TaskRepository();
+        $this->columns = new ColumnRepository();
+        $this->boards = new BoardRepository();
+        $this->activities = new TaskActivityRepository();
+    }
 
     public function index(string $userId, array $payload): void
     {
@@ -37,7 +45,15 @@ final class TaskController
             return;
         }
         $payload['title'] = ValidationService::requiredString($payload, 'title', 2, 255);
-        ResponseService::json(true, $this->tasks->create($columnId, $payload), null, [], 201);
+        $task = $this->tasks->create($columnId, $payload);
+        $this->activities->log(
+            (string) $boardId,
+            (string) $task['id'],
+            $userId,
+            'task_created',
+            ['title' => (string) ($task['title'] ?? '')]
+        );
+        ResponseService::json(true, $task, null, [], 201);
     }
 
     public function update(string $userId, array $payload): void
@@ -49,6 +65,7 @@ final class TaskController
             return;
         }
         $this->tasks->update($taskId, $payload);
+        $this->activities->log($boardId, $taskId, $userId, 'task_updated', ['fields' => array_keys($payload)]);
         ResponseService::json(true, ['updated' => true], null);
     }
 
@@ -69,6 +86,13 @@ final class TaskController
             return;
         }
         $this->tasks->move($taskId, $targetColumnId, $position);
+        $this->activities->log(
+            $boardId,
+            $taskId,
+            $userId,
+            'task_moved',
+            ['column_id' => $targetColumnId, 'position' => $position]
+        );
         ResponseService::json(true, ['moved' => true], null);
     }
 

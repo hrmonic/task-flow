@@ -135,6 +135,7 @@ $router->delete('/api/boards/{id}', fn(array $params) => $auth->run(fn(string $u
 $router->get('/api/boards/{id}/contributors', fn(array $params) => $auth->run(fn(string $userId) => $boardController->contributors($userId, $params)));
 $router->post('/api/boards/{id}/contributors/invite', fn(array $params) => $auth->run(fn(string $userId) => $boardController->inviteContributor($userId, $params)));
 $router->delete('/api/boards/{id}/contributors/{user_id}', fn(array $params) => $auth->run(fn(string $userId) => $boardController->removeContributor($userId, $params)));
+$router->get('/api/boards/{id}/activity', fn(array $params) => $auth->run(fn(string $userId) => $boardController->activity($userId, $params)));
 
 $router->get('/api/invitations', fn(array $params) => $auth->run(fn(string $userId) => $invitationController->index($userId)));
 $router->post('/api/invitations/{id}/accept', fn(array $params) => $auth->run(fn(string $userId) => $invitationController->accept($userId, $params)));

@@ -112,6 +112,20 @@
   margin-bottom: 1rem;
 }
 
+.board-head-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.board-head-toggles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .board-toolbar-body {
   padding: 1.15rem 1.2rem 1.05rem;
 }
@@ -259,6 +273,29 @@
   display: inline-flex;
   gap: 0.35rem;
   flex-shrink: 0;
+}
+
+.board-activity-panel {
+  margin-bottom: 0.7rem;
+}
+
+.board-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.board-activity-item {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.79rem;
+}
+
+.board-activity-meta {
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
 
 .toolbar-grid #boardDescInput {

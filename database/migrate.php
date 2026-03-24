@@ -32,6 +32,7 @@ function migrationLooksApplied(PDO $pdo, string $filename): bool
         '003_create_columns.sql' => 'columns',
         '004_create_tasks.sql' => 'tasks',
         '005_create_board_contributors_and_invitations.sql' => 'board_contributors',
+        '006_create_task_activity_logs.sql' => 'task_activity_logs',
     ];
     $table = $tableByMigration[$filename] ?? null;
     if ($table === null) {

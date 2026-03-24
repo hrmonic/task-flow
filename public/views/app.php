@@ -134,7 +134,14 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
 
       <section id="boardSection" hidden aria-label="Tableaux Kanban">
         <div class="tf-board-head">
-          <h2 class="tf-h2" style="font-size:1.25rem;margin:0 0 0.25rem">Tableau actif</h2>
+          <div class="board-head-top">
+            <h2 class="tf-h2" style="font-size:1.25rem;margin:0">Tableau actif</h2>
+            <div class="board-head-toggles">
+              <button type="button" id="toggleSidebarBtn" class="tf-btn tf-btn--ghost tf-btn--sm">Masquer la barre latérale</button>
+              <button type="button" id="toggleBoardInfoBtn" class="tf-btn tf-btn--ghost tf-btn--sm">Masquer les informations</button>
+              <button type="button" id="toggleBoardActivityBtn" class="tf-btn tf-btn--ghost tf-btn--sm">Masquer l'historique</button>
+            </div>
+          </div>
           <p class="tf-muted board-head-hint">Modifiez le tableau sélectionné.</p>
         </div>
 
@@ -153,7 +160,7 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
             <ul id="boardSidebarList" class="tf-board-list"></ul>
           </aside>
           <div class="tf-board-main">
-            <div class="tf-card board-toolbar-card mb-3">
+            <div id="boardInfoPanel" class="tf-card board-toolbar-card mb-3">
               <div class="tf-card-body board-toolbar-body">
                 <label class="tf-sr-only" for="boardSelect">Choisir un tableau</label>
                 <select id="boardSelect" class="tf-hidden-select" aria-hidden="true" tabindex="-1" title="Synchronisation interne"></select>
@@ -201,6 +208,12 @@ $csrfToken = htmlspecialchars(CsrfService::token(), ENT_QUOTES, 'UTF-8');
               </div>
             </div>
             <div id="kanbanBoard" class="kanban-board" aria-busy="false"></div>
+            <div id="boardActivityPanel" class="tf-card board-activity-panel mt-2">
+              <div class="tf-card-body">
+                <h3 class="tf-h3" style="font-size:1rem;margin-bottom:0.5rem">Historique des modifications</h3>
+                <div id="boardActivityList" class="board-activity-list"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

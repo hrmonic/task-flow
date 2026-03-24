@@ -307,6 +307,25 @@ function columnDropPosition1Based(board, section) {
   return i >= 0 ? i + 1 : Math.max(1, cols.length);
 }
 
+function autoScrollBoardOnDragOver(board, clientX) {
+  const rect = board.getBoundingClientRect();
+  const edgeThreshold = 72;
+  const maxStep = 22;
+  let delta = 0;
+
+  if (clientX < rect.left + edgeThreshold) {
+    const ratio = (rect.left + edgeThreshold - clientX) / edgeThreshold;
+    delta = -Math.ceil(maxStep * Math.min(1, Math.max(0, ratio)));
+  } else if (clientX > rect.right - edgeThreshold) {
+    const ratio = (clientX - (rect.right - edgeThreshold)) / edgeThreshold;
+    delta = Math.ceil(maxStep * Math.min(1, Math.max(0, ratio)));
+  }
+
+  if (delta !== 0) {
+    board.scrollLeft += delta;
+  }
+}
+
 export function initDragAndDrop() {
   let currentTaskId = null;
   let draggingEl = null;
@@ -376,6 +395,8 @@ export function initDragAndDrop() {
   });
 
   board.addEventListener("dragover", (e) => {
+    autoScrollBoardOnDragOver(board, e.clientX);
+
     if (draggingColumnSection && currentColumnId) {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";

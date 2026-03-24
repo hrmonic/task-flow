@@ -11,6 +11,51 @@ import { openTaskModal } from "./taskModal.js";
 
 let lastLoadedBoardId = null;
 const TASK_DONE_STORAGE_KEY = "taskflow_task_done";
+const BOARD_CACHE_STORAGE_KEY = "taskflow_board_cache_v1";
+
+function getBoardCacheMap() {
+  try {
+    const raw = localStorage.getItem(BOARD_CACHE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setBoardCacheMap(map) {
+  localStorage.setItem(BOARD_CACHE_STORAGE_KEY, JSON.stringify(map));
+}
+
+function getBoardCache(boardId) {
+  const map = getBoardCacheMap();
+  const entry = map[boardId];
+  if (!entry || !Array.isArray(entry.columns)) return null;
+  return entry.columns;
+}
+
+function setBoardCache(boardId, columns) {
+  if (!boardId || !Array.isArray(columns)) return;
+  const map = getBoardCacheMap();
+  map[boardId] = {
+    updated_at: Date.now(),
+    columns,
+  };
+  setBoardCacheMap(map);
+}
+
+async function fetchBoardData(boardId) {
+  const columns = await apiFetch(`/api/boards/${boardId}/columns`);
+  const withTasks = await Promise.all(
+    columns.map(async (col) => ({
+      ...col,
+      tasks: await apiFetch(`/api/columns/${col.id}/tasks`),
+    })),
+  );
+  setBoardCache(boardId, withTasks);
+  return withTasks;
+}
 
 function getTaskDoneMap() {
   try {
@@ -43,7 +88,7 @@ function boardSelectValue() {
 }
 
 export async function reloadActiveBoard() {
-  await loadBoard(boardSelectValue());
+  await loadBoard(boardSelectValue(), { force: true });
 }
 
 function renderBoardSkeleton() {
@@ -57,7 +102,8 @@ function renderBoardSkeleton() {
   board.innerHTML = `<div class="tf-skeleton-board">${col()}${col()}${col()}</div>`;
 }
 
-export async function loadBoard(boardId) {
+export async function loadBoard(boardId, options = {}) {
+  const force = Boolean(options.force);
   if (!boardId) return;
   if (lastLoadedBoardId !== boardId) {
     clearHistory();
@@ -69,13 +115,12 @@ export async function loadBoard(boardId) {
     renderBoardSkeleton();
   }
   try {
-    const columns = await apiFetch(`/api/boards/${boardId}/columns`);
-    const withTasks = await Promise.all(
-      columns.map(async (col) => ({
-        ...col,
-        tasks: await apiFetch(`/api/columns/${col.id}/tasks`),
-      })),
-    );
+    const cached = !force ? getBoardCache(boardId) : null;
+    if (cached) {
+      renderBoard(cached);
+      return;
+    }
+    const withTasks = await fetchBoardData(boardId);
     renderBoard(withTasks);
   } catch (err) {
     if (board) board.replaceChildren();
@@ -515,6 +560,7 @@ export function initDragAndDrop() {
           method: "PATCH",
           body: JSON.stringify({ position }),
         });
+        await fetchBoardData(boardSelectValue());
       } catch {
         await reloadActiveBoard();
       }
@@ -547,6 +593,7 @@ export function initDragAndDrop() {
           position,
         }),
       });
+      await fetchBoardData(boardSelectValue());
       if (
         srcCol &&
         srcPos != null &&

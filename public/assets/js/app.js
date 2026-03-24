@@ -24,6 +24,9 @@ const BOARD_ICON_STORAGE_KEY = "taskflow_board_icon_map";
 const LAYOUT_SIDEBAR_KEY = "taskflow_layout_sidebar_visible";
 const LAYOUT_INFO_KEY = "taskflow_layout_info_visible";
 const LAYOUT_ACTIVITY_KEY = "taskflow_layout_activity_visible";
+const BOARDS_CACHE_STORAGE_KEY = "taskflow_boards_cache_v1";
+const BOARD_CONTRIB_CACHE_STORAGE_KEY = "taskflow_board_contrib_cache_v1";
+const BOARD_ACTIVITY_CACHE_STORAGE_KEY = "taskflow_board_activity_cache_v1";
 
 /** @type {AbortController | null} */
 let paletteKeyAbort = null;
@@ -209,6 +212,17 @@ function setAuthenticatedShell(active) {
   document.body.classList.toggle("is-authenticated", active);
 }
 
+function syncAuthChrome() {
+  const isLogged = Boolean(getToken());
+  const logoutBtn = document.getElementById("logoutBtn");
+  const authSection = document.getElementById("authSection");
+  const isAuthViewVisible = Boolean(authSection && !authSection.hidden);
+  if (logoutBtn) {
+    logoutBtn.hidden = !isLogged || isAuthViewVisible;
+  }
+  setAuthenticatedShell(isLogged);
+}
+
 function getDashboardEl() {
   return document.getElementById("dashboardSection");
 }
@@ -246,6 +260,21 @@ function isLayoutVisible(storageKey, defaultVisible = true) {
 
 function persistLayoutVisible(storageKey, visible) {
   localStorage.setItem(storageKey, visible ? "1" : "0");
+}
+
+function readStorageObject(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStorageObject(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
 }
 
 function applyBoardLayoutVisibility() {
@@ -447,10 +476,12 @@ function showAppView(view) {
   const dash = getDashboardEl();
   const board = getBoardSectionEl();
   const auth = document.getElementById("authSection");
+  const logoutBtn = document.getElementById("logoutBtn");
   if (view === "auth") {
     if (dash) dash.hidden = true;
     if (board) board.hidden = true;
     if (auth) auth.hidden = false;
+    if (logoutBtn) logoutBtn.hidden = true;
     return;
   }
   if (!getToken()) return;
@@ -458,6 +489,7 @@ function showAppView(view) {
     if (dash) dash.hidden = false;
     if (board) board.hidden = true;
     if (auth) auth.hidden = true;
+    syncAuthChrome();
     persistAppView("dashboard");
     return;
   }
@@ -465,6 +497,7 @@ function showAppView(view) {
     if (dash) dash.hidden = true;
     if (board) board.hidden = false;
     if (auth) auth.hidden = true;
+    syncAuthChrome();
     persistAppView("boards");
   }
 }
@@ -625,14 +658,25 @@ function renderBoardActivity(items) {
   });
 }
 
-async function refreshBoardActivity() {
+async function refreshBoardActivity(force = false) {
   if (!state.activeBoardId) {
     renderBoardActivity([]);
     return;
   }
+  const cache = readStorageObject(BOARD_ACTIVITY_CACHE_STORAGE_KEY);
+  if (!force) {
+    const cached = cache[state.activeBoardId];
+    if (Array.isArray(cached)) {
+      renderBoardActivity(cached);
+      return;
+    }
+  }
   try {
     const activity = await apiFetch(`/api/boards/${state.activeBoardId}/activity`);
-    renderBoardActivity(Array.isArray(activity) ? activity : []);
+    const items = Array.isArray(activity) ? activity : [];
+    renderBoardActivity(items);
+    cache[state.activeBoardId] = items;
+    writeStorageObject(BOARD_ACTIVITY_CACHE_STORAGE_KEY, cache);
   } catch {
     renderBoardActivity([]);
   }
@@ -643,11 +687,7 @@ function startBoardActivityPolling() {
     window.clearInterval(boardActivityPollInterval);
     boardActivityPollInterval = null;
   }
-  boardActivityPollInterval = window.setInterval(() => {
-    const panel = document.getElementById("boardActivityPanel");
-    if (!panel || panel.hidden) return;
-    refreshBoardActivity();
-  }, 25000);
+  // Pas de polling automatique : on rafraîchit uniquement après actions utilisateur.
 }
 
 function updateInvitationBadge(count) {
@@ -688,11 +728,21 @@ function renderInvitationPanel(invitations) {
   });
 }
 
-async function refreshIncomingInvitations() {
+async function refreshIncomingInvitations(force = false) {
   if (!getToken()) return;
+  if (!force) {
+    const cached = readStorageObject("taskflow_invitations_cache_v1");
+    if (Array.isArray(cached.items)) {
+      state.pendingInvitations = cached.items;
+      updateInvitationBadge(state.pendingInvitations.length);
+      renderInvitationPanel(state.pendingInvitations);
+      return;
+    }
+  }
   try {
     const invitations = await apiFetch("/api/invitations");
     state.pendingInvitations = Array.isArray(invitations) ? invitations : [];
+    writeStorageObject("taskflow_invitations_cache_v1", { items: state.pendingInvitations });
     updateInvitationBadge(state.pendingInvitations.length);
     renderInvitationPanel(state.pendingInvitations);
   } catch {
@@ -705,8 +755,8 @@ async function respondInvitation(invitationId, action) {
   const endpoint = action === "accept" ? "accept" : "reject";
   try {
     await apiFetch(`/api/invitations/${invitationId}/${endpoint}`, { method: "POST", body: JSON.stringify({}) });
-    await refreshIncomingInvitations();
-    await bootstrapBoard();
+    await refreshIncomingInvitations(true);
+    await bootstrapBoard(true);
     showToast(action === "accept" ? "Invitation acceptée." : "Invitation refusée.");
   } catch (err) {
     showToast(err instanceof Error ? err.message : "Action impossible.", true);
@@ -753,7 +803,7 @@ function renderBoardContributors(contributors, canManage) {
   });
 }
 
-async function refreshBoardContributors() {
+async function refreshBoardContributors(force = false) {
   const input = document.getElementById("boardContributorInput");
   const btn = document.getElementById("boardInviteBtn");
   if (!state.activeBoardId) {
@@ -762,10 +812,24 @@ async function refreshBoardContributors() {
     if (btn) btn.disabled = true;
     return;
   }
+  const cache = readStorageObject(BOARD_CONTRIB_CACHE_STORAGE_KEY);
+  if (!force) {
+    const cached = cache[state.activeBoardId];
+    if (cached && Array.isArray(cached.contributors)) {
+      const canManage = Boolean(cached.can_manage);
+      state.boardCanManageContributors = canManage;
+      if (input) input.disabled = !canManage;
+      if (btn) btn.disabled = !canManage;
+      renderBoardContributors(cached.contributors, canManage);
+      return;
+    }
+  }
   try {
     const data = await apiFetch(`/api/boards/${state.activeBoardId}/contributors`);
     const contributors = Array.isArray(data?.contributors) ? data.contributors : [];
     const canManage = Boolean(data?.can_manage);
+    cache[state.activeBoardId] = { contributors, can_manage: canManage };
+    writeStorageObject(BOARD_CONTRIB_CACHE_STORAGE_KEY, cache);
     state.boardCanManageContributors = canManage;
     if (input) input.disabled = !canManage;
     if (btn) btn.disabled = !canManage;
@@ -796,8 +860,8 @@ async function inviteContributorFromInput() {
       body: JSON.stringify({ identifier }),
     });
     input.value = "";
-    await refreshBoardContributors();
-    await refreshIncomingInvitations();
+    await refreshBoardContributors(true);
+    await refreshIncomingInvitations(true);
     if (data?.mail_sent) {
       showToast("Invitation envoyée (application + e-mail).");
     } else {
@@ -814,7 +878,7 @@ async function removeContributor(userId) {
   if (!state.activeBoardId || !state.boardCanManageContributors) return;
   try {
     await apiFetch(`/api/boards/${state.activeBoardId}/contributors/${userId}`, { method: "DELETE" });
-    await refreshBoardContributors();
+    await refreshBoardContributors(true);
     showToast("Contributeur retiré.");
   } catch (err) {
     showToast(err instanceof Error ? err.message : "Suppression impossible.", true);
@@ -903,6 +967,7 @@ async function createBoardByName(rawName) {
       body: JSON.stringify({ name }),
     });
     state.boards.push(board);
+    writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
     fillBoardSelect(select, state.boards);
     select.value = board.id;
     state.activeBoardId = board.id;
@@ -910,8 +975,8 @@ async function createBoardByName(rawName) {
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(board.id);
-    await refreshBoardContributors();
-    await refreshBoardActivity();
+    await refreshBoardContributors(true);
+    await refreshBoardActivity(true);
     return true;
   } catch (err) {
     const message =
@@ -1142,7 +1207,7 @@ function renderAuth() {
 
     try {
       await login(email, password);
-      await bootstrapBoard();
+      await bootstrapBoard(true);
     } catch (error) {
       setAuthError(
         "loginError",
@@ -1186,7 +1251,7 @@ function renderAuth() {
 
     try {
       await register(name, email, password);
-      await bootstrapBoard();
+      await bootstrapBoard(true);
     } catch (error) {
       setAuthError(
         "registerError",
@@ -1463,7 +1528,7 @@ function wireGlobalShortcuts() {
   });
 }
 
-async function bootstrapBoard() {
+async function bootstrapBoard(forceNetwork = false) {
   if (!getToken()) return;
   const logoutBtn = document.getElementById("logoutBtn");
   const authSection = document.getElementById("authSection");
@@ -1487,13 +1552,25 @@ async function bootstrapBoard() {
   showAppView(getStoredAppView());
 
   try {
-    state.boards = await apiFetch("/api/boards");
+    if (!forceNetwork) {
+      const cachedBoards = readStorageObject(BOARDS_CACHE_STORAGE_KEY);
+      if (Array.isArray(cachedBoards.items) && cachedBoards.items.length > 0) {
+        state.boards = cachedBoards.items;
+      } else {
+        state.boards = await apiFetch("/api/boards");
+        writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
+      }
+    } else {
+      state.boards = await apiFetch("/api/boards");
+      writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
+    }
     if (state.boards.length === 0) {
       const b = await apiFetch("/api/boards", {
         method: "POST",
         body: JSON.stringify({ name: "Mon tableau" }),
       });
       state.boards = [b];
+      writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
     }
     fillBoardSelect(select, state.boards);
     const storedBoardId = getStoredActiveBoardId();
@@ -1508,10 +1585,17 @@ async function bootstrapBoard() {
     syncBoardEditorFromState();
     renderBoardSidebar(state.boards, state.activeBoardId);
     await loadBoard(state.activeBoardId);
-    await refreshBoardContributors();
-    await refreshIncomingInvitations();
-    await refreshBoardActivity();
+    await refreshBoardContributors(forceNetwork);
+    await refreshIncomingInvitations(forceNetwork);
+    await refreshBoardActivity(forceNetwork);
   } catch (err) {
+    if (err instanceof Error && /Unauthorized/i.test(err.message)) {
+      logout();
+      syncAuthChrome();
+      showAppView("auth");
+      renderAuth();
+      return;
+    }
     kanban.replaceChildren();
     const msg = document.createElement("p");
     msg.className = "board-inline-error mb-0";
@@ -1564,12 +1648,13 @@ async function bootstrapBoard() {
         b.name = name;
         b.description = description === "" ? null : description;
       }
+      writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
       fillBoardSelect(select, state.boards);
       select.value = id;
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
-      await refreshBoardContributors();
-      await refreshBoardActivity();
+      await refreshBoardContributors(true);
+      await refreshBoardActivity(true);
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Enregistrement impossible.",
@@ -1599,14 +1684,15 @@ async function bootstrapBoard() {
         });
         state.boards = [b];
       }
+      writeStorageObject(BOARDS_CACHE_STORAGE_KEY, { items: state.boards });
       fillBoardSelect(select, state.boards);
       state.activeBoardId = select.value;
       persistActiveBoardId(state.activeBoardId);
       syncBoardEditorFromState();
       renderBoardSidebar(state.boards, state.activeBoardId);
       await loadBoard(state.activeBoardId);
-      await refreshBoardContributors();
-      await refreshBoardActivity();
+      await refreshBoardContributors(true);
+      await refreshBoardActivity(true);
     } catch (err) {
       setBoardToolbarError(
         err instanceof Error ? err.message : "Suppression impossible.",
@@ -1619,8 +1705,12 @@ async function bootstrapBoard() {
 document.getElementById("logoutBtn").onclick = () => {
   localStorage.removeItem(APP_VIEW_STORAGE_KEY);
   localStorage.removeItem(ACTIVE_BOARD_STORAGE_KEY);
+  localStorage.removeItem(BOARDS_CACHE_STORAGE_KEY);
+  localStorage.removeItem(BOARD_CONTRIB_CACHE_STORAGE_KEY);
+  localStorage.removeItem(BOARD_ACTIVITY_CACHE_STORAGE_KEY);
+  localStorage.removeItem("taskflow_invitations_cache_v1");
   logout();
-  setAuthenticatedShell(false);
+  syncAuthChrome();
   location.reload();
 };
 
@@ -1633,21 +1723,29 @@ initTheme();
 wireThemeToggle();
 
 if (getToken()) {
-  document.getElementById("logoutBtn").hidden = false;
+  syncAuthChrome();
   document.getElementById("authSection").hidden = true;
   document.getElementById("authSection").replaceChildren();
   setAuthenticatedShell(true);
   showAppView(getStoredAppView());
+  let profileLoaded = true;
   refreshProfileFromApi()
-    .catch(() => {})
+    .catch(() => {
+      profileLoaded = false;
+      logout();
+      syncAuthChrome();
+      showAppView("auth");
+      renderAuth();
+    })
     .finally(() => {
       refreshNavUser();
-      bootstrapBoard();
+      if (profileLoaded && getToken()) {
+        bootstrapBoard();
+      }
     });
 } else {
-  setAuthenticatedShell(false);
+  syncAuthChrome();
   refreshNavUser();
-  document.getElementById("logoutBtn").hidden = true;
   showAppView("auth");
   renderAuth();
 }

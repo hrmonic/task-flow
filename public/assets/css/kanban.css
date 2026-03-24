@@ -883,6 +883,13 @@
   border-color: #ef4444 !important;
 }
 
+/* DESCRIPTION COMPLETE */
+.task p {
+  max-height: none !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
 /* MODE LIGHT : ENTETE VIOLET + TEXTE BLANC */
 :root[data-theme="light"] .kanban-column .column-header {
   background: linear-gradient(135deg, #5b49e6 0%, #6d4bff 52%, #7a4fff 100%) !important;
